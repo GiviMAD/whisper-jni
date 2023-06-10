@@ -3,7 +3,7 @@
 A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp).
 
 Example:
-```
+```java
         var whisper = new WhisperJNI();
         whisper.loadLibrary();
         float[] samples = readJFKFileSamples();
@@ -19,7 +19,7 @@ Example:
         ctx.close();
 ```
 Example with state:
-```
+```java
         var whisper = new WhisperJNI();
         whisper.loadLibrary();
         float[] samples = readJFKFileSamples();
