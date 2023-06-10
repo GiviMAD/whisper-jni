@@ -2,7 +2,9 @@ target/
 !.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+src/main/resources/**/*.so
 src/main/resources/**/*.dylib
+src/main/resources/**/*.dll
 
 ### IntelliJ IDEA ###
 .idea

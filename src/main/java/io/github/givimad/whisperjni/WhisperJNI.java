@@ -52,16 +52,16 @@ public class WhisperJNI {
         String osArch = System.getProperty("os.arch").toLowerCase();
         if (osName.contains("win")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                // bundleLibraryPath = "/librustpotter_java_win_x86_64.dll";
+                bundleLibraryPath = "/win/libwhisperjni.dll";
             }
         } else if (osName.contains("nix") || osName.contains("nux")
                 || osName.contains("aix")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                // bundleLibraryPath = "/librustpotter_java_debian_x86_64.so";
+                bundleLibraryPath = "/debian-amd64/libwhisperjni.so";
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                // bundleLibraryPath = "/librustpotter_java_debian_aarch64.so";
+                bundleLibraryPath = "/debian-aarch64/libwhisperjni.so";
             } else if(osArch.contains("armv7") || osArch.contains("arm")) {
-                // bundleLibraryPath = "/librustpotter_java_debian_armv7l.so";
+                bundleLibraryPath = "/debian-armv7l/libwhisperjni.so";
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
