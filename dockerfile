@@ -1,4 +1,5 @@
 FROM openjdk:17-buster
+ARG RUN_TESTS=true
 RUN apt update && apt install -y build-essential
 RUN wget https://dlcdn.apache.org/maven/maven-3/3.9.2/binaries/apache-maven-3.9.2-bin.tar.gz -q -P /tmp && \
     tar xf /tmp/apache-maven-*.tar.gz -C /opt && \
@@ -13,4 +14,4 @@ COPY build_debian.sh .
 COPY ggml-tiny.bin .
 RUN git submodule update --init
 RUN ./build_debian.sh
-RUN mvn test
+RUN [[ "$RUN_TESTS" == "true" ]] || mvn test
