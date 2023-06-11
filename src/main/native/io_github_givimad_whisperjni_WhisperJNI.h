@@ -50,7 +50,7 @@ JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    full
- * Signature: (ILio/github/givimad/whisperjni/WhisperParams;[FI)I
+ * Signature: (ILio/github/givimad/whisperjni/WhisperFullParams;[FI)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_full
   (JNIEnv *, jobject, jint, jobject, jfloatArray, jint);
@@ -58,7 +58,7 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_full
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    fullWithState
- * Signature: (IILio/github/givimad/whisperjni/WhisperParams;[FI)I
+ * Signature: (IILio/github/givimad/whisperjni/WhisperFullParams;[FI)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullWithState
   (JNIEnv *, jobject, jint, jint, jobject, jfloatArray, jint);

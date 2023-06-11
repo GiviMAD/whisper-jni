@@ -21,7 +21,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-package io.github.givimad.whisperjni;
+package io.github.givimad.whisperjni.internal;
 
 import java.io.*;
 import java.nio.file.FileSystemNotFoundException;

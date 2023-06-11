@@ -1,5 +1,7 @@
 package io.github.givimad.whisperjni;
 
+import io.github.givimad.whisperjni.internal.NativeUtils;
+
 import java.io.IOException;
 import java.nio.file.Path;
 

@@ -1,6 +1,5 @@
 #!/bin/bash
-set -x
-set -e
+set -xe
 
 AARCH=$(dpkg --print-architecture)
 case $AARCH in
@@ -22,5 +21,4 @@ src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/i
 g++ -shared -fPIC $CXXFLAGS -I src/main/native -o src/main/resources/debian-$AARCH/libwhisperjni.so src/main/native/ggml.o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -lc
 
 rm -rf src/main/native/*.o
-rm -rf src/main/java/io/github/givimad/whisperjni/*.class
 

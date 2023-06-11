@@ -1,3 +1,12 @@
-set -x
-set -e
-javac -h src/main/native src/main/java/io/github/givimad/whisperjni/NativeUtils.java src/main/java/io/github/givimad/whisperjni/WhisperContext.java src/main/java/io/github/givimad/whisperjni/WhisperState.java src/main/java/io/github/givimad/whisperjni/WhisperJNI.java
+set -xe
+
+LIB_SRC=src/main/java/io/github/givimad/whisperjni
+javac -h src/main/native \
+$LIB_SRC/internal/NativeUtils.java \
+$LIB_SRC/WhisperContext.java \
+$LIB_SRC/WhisperSamplingStrategy.java \
+$LIB_SRC/WhisperFullParams.java \
+$LIB_SRC/WhisperState.java \
+$LIB_SRC/WhisperJNI.java
+
+rm -rf $LIB_SRC/*.class $LIB_SRC/internal/*.class
