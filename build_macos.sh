@@ -24,7 +24,7 @@ case "$AARCH" in
     
 esac
 
-INCLUDE_JAVA="-I $JAVA_HOME/include"
+INCLUDE_JAVA="-I $JAVA_HOME/include -I $JAVA_HOME/include/darwin"
 TARGET=$AARCH-apple-macosx$TARGET_VERSION
 
 cc -O3 --target="$TARGET" -std=c11 -arch "$AARCH" \
