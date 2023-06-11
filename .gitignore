@@ -5,7 +5,7 @@ target/
 src/main/resources/**/*.so
 src/main/resources/**/*.dylib
 src/main/resources/**/*.dll
-
+ggml-*.bin
 ### IntelliJ IDEA ###
 .idea
 *.iws

@@ -12,7 +12,7 @@ import java.nio.file.Path;
 import static junit.framework.TestCase.assertEquals;
 
 public class WhisperJNITest {
-    Path testModelPath = Path.of(System.getProperty("user.home"), "ggml-tiny.bin");
+    Path testModelPath = Path.of("ggml-tiny.bin");
     Path samplePath = Path.of("src/main/native/whisper/samples/jfk.wav");
     WhisperJNI whisper;
 
@@ -21,7 +21,7 @@ public class WhisperJNITest {
         var modelFile = testModelPath.toFile();
         var sampleFile = samplePath.toFile();
         if(!modelFile.exists() || !modelFile.isFile()) {
-            throw new RuntimeException("Missing model file");
+            throw new RuntimeException("Missing model file: " + testModelPath.toAbsolutePath().toString());
         }
         if(!sampleFile.exists() || !sampleFile.isFile()) {
             throw new RuntimeException("Missing sample file");

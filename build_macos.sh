@@ -1,6 +1,5 @@
 set -x
 set -e
-javac -h src/main/native src/main/java/io/github/givimad/whisperjni/NativeUtils.java src/main/java/io/github/givimad/whisperjni/WhisperContext.java src/main/java/io/github/givimad/whisperjni/WhisperState.java src/main/java/io/github/givimad/whisperjni/WhisperJNI.java
 
 cc -I${JAVA_HOME}/include -I${JAVA_HOME}/include/darwin -O3 -DNDEBUG -std=c11 -fPIC -pthread -mf16c -mfma -mavx -mavx2 -c ./src/main/native/whisper/ggml.c -o ./src/main/native/ggml.o
 
