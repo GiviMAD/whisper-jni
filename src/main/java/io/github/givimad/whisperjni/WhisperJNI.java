@@ -65,7 +65,7 @@ public class WhisperJNI {
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                bundleLibraryPath = "/macos-x86-64/libwhisperjni.dylib";
+                bundleLibraryPath = "/macos-amd64/libwhisperjni.dylib";
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
                 bundleLibraryPath ="/macos-arm64/libwhisperjni.dylib";
             }
