@@ -12,7 +12,7 @@ jobs:
       run: |
         git submodule update --init
         ./download-test-model.sh
-    - name: artifact debian x86_64
+    - name: Artifact debian x86_64
       uses: actions/upload-artifact@v3
       with:
         name: tiny-ggml-model
@@ -33,11 +33,11 @@ jobs:
         run: |
           mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
           mkdir -p dist
-      - name: Build binaries
+      - name: Build native library
         run: |
           docker build -f dockerfile . -t whisperjni_binary:x86_64 --load
           docker run --platform=amd64 -v $(pwd)/dist:/out whisperjni_binary:x86_64 bash -c "cp src/main/resources/debian-amd64/*.so /out/"
-      - name: artifact debian x86_64
+      - name: Artifact debian x86_64
         uses: actions/upload-artifact@v3
         with:
           name: debian-binary
@@ -59,11 +59,11 @@ jobs:
         run: |
           mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
           mkdir -p dist
-      - name: Build binaries
+      - name: Build native library
         run: |
           docker build -f dockerfile . -t whisperjni_binary:arm64 --platform arm64 --load
           DOCKER_BUILDKIT=1 docker run --platform=arm64 -v $(pwd)/dist:/out whisperjni_binary:arm64 bash -c "cp src/main/resources/debian-arm64/*.so /out/"
-      - name: artifact debian arm64
+      - name: Artifact debian arm64
         uses: actions/upload-artifact@v3
         with:
           name: debian-binary-arm64
@@ -89,13 +89,13 @@ jobs:
           git submodule update --init
           mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
           mkdir dist
-      - name: build binary
+      - name: Build native library
         shell: powershell
         run: |
           .\build_win.ps1
           # mvn test
           mv src\main\resources\win-amd64\libwhisperjni.dll .\dist\
-      - name: artifact windows x86_64
+      - name: Artifact windows x86_64
         uses: actions/upload-artifact@v3
         with:
           name: windows-binary-x86_64
@@ -119,24 +119,27 @@ jobs:
         run: |
           export DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/
           mkdir -p dist
+          mkdir -p dist_arm64
           git submodule update --init
           mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
       - name: Build binary
         run: |
           export DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/
-          ./build_macos.sh
+          ./build_macos.sh amd64
+          ./build_macos.sh arm64
           # mvn test
           mv src/main/resources/macos-amd64/libwhisperjni.dylib dist/
-      - name: artifact macos x86_64
+          mv src/main/resources/macos-arm64/libwhisperjni.dylib dist_arm64/
+      - name: Artifact macos amd64
         uses: actions/upload-artifact@v3
         with:
-          name: macos-binary-x86_64
+          name: macos-binary-amd64
           path: dist/libwhisperjni.dylib
-      # - name: artifact macos arm64
-      #   uses: actions/upload-artifact@v3
-      #   with:
-      #     name: macos-binary-arm64
-      #     path: binding/dist/libwhisperjni_java_macos_aarch64.dylib
+      - name: Artifact macos arm64
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-binary-arm64
+          path: dist_arm64/libwhisperjni.dylib
 
   # deploy:
   #   if: startsWith(github.ref, 'refs/tags/')
