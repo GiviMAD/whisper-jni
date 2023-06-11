@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 public class WhisperJNI {
+    private static boolean libraryLoaded;
+
     private native int init(String model);
 
     public WhisperContext init(Path model) {
@@ -49,6 +51,9 @@ public class WhisperJNI {
         return fullGetSegmentTextFromState(state.ref, index);
     }
     public static void loadLibrary() throws IOException {
+        if (libraryLoaded) {
+            return;
+        }
         String bundleLibraryPath = null;
         String osName = System.getProperty("os.name").toLowerCase();
         String osArch = System.getProperty("os.arch").toLowerCase();
@@ -74,5 +79,6 @@ public class WhisperJNI {
             throw new java.io.IOException("WhisperJNI: Unsupported platform " + osName + " - " + osArch);
         }
         NativeUtils.loadLibraryFromJar(bundleLibraryPath);
+        libraryLoaded = true;
     }
 }
