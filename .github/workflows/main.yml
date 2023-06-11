@@ -1,0 +1,172 @@
+name: CI
+on:
+  push:
+    tags: [ "v*.*.*" ]
+  workflow_dispatch:
+jobs:
+  download-model:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Download tiny ggml model
+      run: |
+        git submodule update --init
+        ./download-test-model.sh
+    - name: artifact debian x86_64
+      uses: actions/upload-artifact@v3
+      with:
+        name: tiny-ggml-model
+        path: ggml-tiny.bin
+        retention-days: 2
+
+  build-lib-debian-x86_64:
+    needs: [download-model]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          install: true
+      - name: Setup project dir
+        run: |
+          mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
+          mkdir -p dist
+      - name: Build binaries
+        run: |
+          docker build -f dockerfile . -t whisperjni_binary:x86_64 --load
+          docker run --platform=amd64 -v $(pwd)/dist:/out whisperjni_binary:x86_64 bash -c "cp src/main/resources/debian-amd64/*.so /out/"
+      - name: artifact debian x86_64
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-binary
+          path: dist/libwhisperjni.so
+
+  build-lib-debian-arm64:
+    needs: [download-model]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          install: true
+      - name: Setup project dir
+        run: |
+          mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
+          mkdir -p dist
+      - name: Build binaries
+        run: |
+          docker build -f dockerfile . -t whisperjni_binary:arm64 --platform arm64 --load
+          DOCKER_BUILDKIT=1 docker run --platform=arm64 -v $(pwd)/dist:/out whisperjni_binary:arm64 bash -c "cp src/main/resources/debian-arm64/*.so /out/"
+      - name: artifact debian arm64
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-binary-arm64
+          path: dist/libwhisperjni.so
+
+  build-lib-windows:
+    needs: [download-model]
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      # - name: Set up Maven
+      #   uses: stCarolas/setup-maven@v4.5
+      #   with:
+      #     maven-version: 3.9.2
+      - name: Setup project dir
+        run: |
+          choco upgrade mingw
+          git submodule update --init
+          mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
+          mkdir dist
+      - name: build binary
+        shell: powershell
+        run: |
+          .\build_win.ps1
+          # mvn test
+          mv src\main\resources\win-amd64\libwhisperjni.dll .\dist\
+      - name: artifact windows x86_64
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-binary-x86_64
+          path: dist/libwhisperjni.dll
+
+  build-lib-macos:
+    needs: [download-model]
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+      # - name: Set up Maven
+      #   uses: stCarolas/setup-maven@v4.5
+      #   with:
+      #     maven-version: 3.9.2
+      - name: Setup project dir
+        run: |
+          export DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/
+          mkdir -p dist
+          git submodule update --init
+          mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
+      - name: Build binary
+        run: |
+          export DYLD_LIBRARY_PATH=/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/lib/
+          ./build_macos.sh
+          # mvn test
+          mv src/main/resources/macos-amd64/libwhisperjni.dylib dist/
+      - name: artifact macos x86_64
+        uses: actions/upload-artifact@v3
+        with:
+          name: macos-binary-x86_64
+          path: dist/libwhisperjni.dylib
+      # - name: artifact macos arm64
+      #   uses: actions/upload-artifact@v3
+      #   with:
+      #     name: macos-binary-arm64
+      #     path: binding/dist/libwhisperjni_java_macos_aarch64.dylib
+
+  # deploy:
+  #   if: startsWith(github.ref, 'refs/tags/')
+  #   needs: [build-lib-debian-x86_64,build-lib-debian-arm,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #   - uses: actions/checkout@v2
+  #   - uses: actions/download-artifact@v3
+  #   - name: check tree
+  #     run: ls -R
+  #   - name: setup resources
+  #     run: |
+  #       mv ./debian-binary/libwhisperjni_java_debian_x86_64.so ./src/main/resources/libwhisperjni_java_debian_x86_64.so
+  #       mv ./debian-binary-arm/libwhisperjni_java_debian_armv7l.so ./src/main/resources/libwhisperjni_java_debian_armv7l.so
+  #       mv ./debian-binary-arm64/libwhisperjni_java_debian_aarch64.so ./src/main/resources/libwhisperjni_java_debian_aarch64.so
+  #       mv ./windows-binary-x86_64/libwhisperjni_java_win_x86_64.dll ./src/main/resources/libwhisperjni_java_win_x86_64.dll  
+  #       mv ./macos-binary-x86_64/libwhisperjni_java_macos_x86_64.dylib ./src/main/resources/libwhisperjni_java_macos_x86_64.dylib
+  #       mv ./macos-binary-arm64/libwhisperjni_java_macos_aarch64.dylib ./src/main/resources/libwhisperjni_java_macos_aarch64.dylib
+  #   - name: Set up Maven Central Repository
+  #     uses: actions/setup-java@v1
+  #     with:
+  #       java-version: 11
+  #       server-id: sonatype-nexus-staging
+  #       server-username: MAVEN_USERNAME
+  #       server-password: MAVEN_PASSWORD
+  #       gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+  #       gpg-passphrase: MAVEN_GPG_PASSPHRASE
+  #   - name: Deploy with Maven
+  #     run: mvn -B clean deploy -Pci-cd
+  #     env:
+  #       MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+  #       MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+  #       MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
