@@ -20,15 +20,15 @@ public class WhisperJNI {
     }
     protected native void freeState(int state);
 
-    private native int full(int context, float[] samples, int numSamples);
+    private native int full(int context, WhisperFullParams params, float[] samples, int numSamples);
 
-    public int full(WhisperContext context, float[] samples, int numSamples) {
-        return full(context.ref, samples, numSamples);
+    public int full(WhisperContext context, WhisperFullParams params, float[] samples, int numSamples) {
+        return full(context.ref, params, samples, numSamples);
     }
 
-    private native int fullWithState(int context, int state, float[] samples, int numSamples);
-    public int fullWithState(WhisperContext context, WhisperState state, float[] samples, int numSamples) {
-        return fullWithState(context.ref, state.ref, samples, numSamples);
+    private native int fullWithState(int context, int state, WhisperFullParams params, float[] samples, int numSamples);
+    public int fullWithState(WhisperContext context, WhisperState state, WhisperFullParams params, float[] samples, int numSamples) {
+        return fullWithState(context.ref, state.ref, params, samples, numSamples);
     }
     private native int fullNSegmentsFromState(int state);
     public int fullNSegmentsFromState(WhisperState state) {

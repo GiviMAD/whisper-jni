@@ -56,7 +56,8 @@ public class WhisperJNITest {
     public void testFull() throws Exception {
         float[] samples = readJFKFileSamples();
         var ctx = whisper.init(testModelPath);
-        int result = whisper.full(ctx, samples, samples.length);
+        var params = new WhisperFullParams();
+        int result = whisper.full(ctx, params, samples, samples.length);
         if(result != 0) {
             throw new RuntimeException("Transcription failed with code " + result);
         }
@@ -70,8 +71,9 @@ public class WhisperJNITest {
     public void testFullwithState() throws Exception {
         float[] samples = readJFKFileSamples();
         var ctx = whisper.initNoState(testModelPath);
+        var params = new WhisperFullParams();
         var state = whisper.initState(ctx);
-        int result = whisper.fullWithState(ctx, state, samples, samples.length);
+        int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
         if(result != 0) {
             throw new RuntimeException("Transcription failed with code " + result);
         }
