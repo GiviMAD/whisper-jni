@@ -54,7 +54,7 @@ public class WhisperJNI {
         String osArch = System.getProperty("os.arch").toLowerCase();
         if (osName.contains("win")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                bundleLibraryPath = "/win/libwhisperjni.dll";
+                bundleLibraryPath = "/win-amd64/libwhisperjni.dll";
             }
         } else if (osName.contains("nix") || osName.contains("nux")
                 || osName.contains("aix")) {
@@ -69,7 +69,7 @@ public class WhisperJNI {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
                 bundleLibraryPath = "/macos-x86-64/libwhisperjni.dylib";
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                // bundleLibraryPath ="/macos-arm64/libwhisperjni.dylib";
+                bundleLibraryPath ="/macos-arm64/libwhisperjni.dylib";
             }
         }
         if (bundleLibraryPath == null) {
