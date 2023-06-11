@@ -9,7 +9,7 @@ case $AARCH in
     ;;
   arm64)
     CFLAGS="$CFLAGS -mcpu=native"
-	CXXFLAGS="$CXXFLAGS -mcpu=native"
+	  CXXFLAGS="$CXXFLAGS -mcpu=native"
     ;;
 esac
 
