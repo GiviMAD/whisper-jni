@@ -61,9 +61,7 @@ public class WhisperJNI {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
                 bundleLibraryPath = "/debian-amd64/libwhisperjni.so";
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                bundleLibraryPath = "/debian-aarch64/libwhisperjni.so";
-            } else if(osArch.contains("armv7") || osArch.contains("arm")) {
-                bundleLibraryPath = "/debian-armv7l/libwhisperjni.so";
+                bundleLibraryPath = "/debian-arm64/libwhisperjni.so";
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
