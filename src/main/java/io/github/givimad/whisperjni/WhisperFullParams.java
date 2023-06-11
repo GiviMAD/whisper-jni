@@ -40,7 +40,7 @@ public class WhisperFullParams {
      */
     public boolean singleSegment;
     /**
-     * Print special tokens (e.g. <SOT>, <EOT>, <BEG>, etc.)
+     * Print special tokens
      */
     public boolean printSpecial;
     /**
