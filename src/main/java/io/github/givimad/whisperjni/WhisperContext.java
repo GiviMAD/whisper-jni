@@ -1,16 +1,29 @@
 package io.github.givimad.whisperjni;
 
-public class WhisperContext implements AutoCloseable {
-    protected final int ref;
+/**
+ * The {@link WhisperContext} class represents a native whisper.cpp context.
+ *
+ *
+ * @author Miguel Álvarez Díez - Initial contribution
+ */
+public class WhisperContext extends WhisperJNI.WhisperJNIPointer {
     private final WhisperJNI whisper;
 
+    /**
+     * Internal context constructor
+     * @param whisper library instance
+     * @param ref native pointer identifier
+     */
     protected WhisperContext(WhisperJNI whisper, int ref) {
+        super(ref);
         this.whisper = whisper;
-        this.ref = ref;
     }
-
     @Override
-    public void close() throws Exception {
+    public void close() {
+        if(isReleased()) {
+            return;
+        }
+        super.close();
         whisper.freeContext(ref);
     }
 }

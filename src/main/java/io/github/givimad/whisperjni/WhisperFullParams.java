@@ -1,9 +1,23 @@
 package io.github.givimad.whisperjni;
 
+/**
+ * The {@link WhisperFullParams} instances needed to configure the whisper full transcription
+ *
+ * @author Miguel Álvarez Díez - Initial contribution
+ */
 public class WhisperFullParams {
+    /**
+     * Creates a new {@link WhisperFullParams} instance using the provided {@link WhisperSamplingStrategy}
+     *
+     * @param strategy the required {@link WhisperSamplingStrategy}
+     */
     public WhisperFullParams(WhisperSamplingStrategy strategy) {
         this.strategy = strategy.ordinal();
     }
+
+    /**
+     * Creates a new {@link WhisperFullParams} instance using the greedy {@link WhisperSamplingStrategy}
+     */
     public WhisperFullParams() {
         this(WhisperSamplingStrategy.GREEDY);
     }

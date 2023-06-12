@@ -45,7 +45,7 @@ public class NativeUtils {
      * The minimum length a prefix for a file has to have according to {@link File#createTempFile(String, String)}}.
      */
     private static final int MIN_PREFIX_LENGTH = 3;
-    public static final String NATIVE_FOLDER_PATH_PREFIX = "nativeutils";
+    private static final String NATIVE_FOLDER_PATH_PREFIX = "whisper-jni-native";
 
     /**
      * Temporary directory which will contain the DLLs.
