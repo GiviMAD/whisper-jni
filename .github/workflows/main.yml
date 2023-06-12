@@ -26,7 +26,7 @@ jobs:
       - uses: actions/checkout@v3
       - uses: actions/download-artifact@v3
       - name: Docker Setup Buildx
-        uses: docker/setup-buildx-action@v1.6.0
+        uses: docker/setup-buildx-action@v2
         with:
           install: true
       - name: Setup project dir
@@ -40,7 +40,7 @@ jobs:
       - name: Artifact debian x86_64
         uses: actions/upload-artifact@v3
         with:
-          name: debian-binary
+          name: debian-binary-amd64
           path: dist/libwhisperjni.so
 
   build-lib-debian-arm64:
@@ -52,7 +52,7 @@ jobs:
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
       - name: Docker Setup Buildx
-        uses: docker/setup-buildx-action@v1.6.0
+        uses: docker/setup-buildx-action@v2
         with:
           install: true
       - name: Setup project dir
@@ -141,35 +141,34 @@ jobs:
           name: macos-binary-arm64
           path: dist_arm64/libwhisperjni.dylib
 
-  # deploy:
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #   needs: [build-lib-debian-x86_64,build-lib-debian-arm,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - uses: actions/download-artifact@v3
-  #   - name: check tree
-  #     run: ls -R
-  #   - name: setup resources
-  #     run: |
-  #       mv ./debian-binary/libwhisperjni_java_debian_x86_64.so ./src/main/resources/libwhisperjni_java_debian_x86_64.so
-  #       mv ./debian-binary-arm/libwhisperjni_java_debian_armv7l.so ./src/main/resources/libwhisperjni_java_debian_armv7l.so
-  #       mv ./debian-binary-arm64/libwhisperjni_java_debian_aarch64.so ./src/main/resources/libwhisperjni_java_debian_aarch64.so
-  #       mv ./windows-binary-x86_64/libwhisperjni_java_win_x86_64.dll ./src/main/resources/libwhisperjni_java_win_x86_64.dll  
-  #       mv ./macos-binary-x86_64/libwhisperjni_java_macos_x86_64.dylib ./src/main/resources/libwhisperjni_java_macos_x86_64.dylib
-  #       mv ./macos-binary-arm64/libwhisperjni_java_macos_aarch64.dylib ./src/main/resources/libwhisperjni_java_macos_aarch64.dylib
-  #   - name: Set up Maven Central Repository
-  #     uses: actions/setup-java@v1
-  #     with:
-  #       java-version: 11
-  #       server-id: sonatype-nexus-staging
-  #       server-username: MAVEN_USERNAME
-  #       server-password: MAVEN_PASSWORD
-  #       gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
-  #       gpg-passphrase: MAVEN_GPG_PASSPHRASE
-  #   - name: Deploy with Maven
-  #     run: mvn -B clean deploy -Pci-cd
-  #     env:
-  #       MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
-  #       MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
-  #       MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
+  deploy:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: [build-lib-debian-x86_64,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - uses: actions/download-artifact@v3
+    - name: check tree
+      run: ls -R
+    - name: setup resources
+      run: |
+        mv ./debian-binary-amd64/libwhisperjni.so ./src/main/resources/debian-amd64/libwhisperjni.so
+        mv ./debian-binary-arm64/libwhisperjni.so ./src/main/resources/debian-arm64/libwhisperjni.so
+        mv ./windows-binary-x86_64/libwhisperjni.dll ./src/main/resources/win-amd64/libwhisperjni.dll
+        mv ./macos-binary-x86_64/libwhisperjni.dylib ./src/main/resources/macos-amd64/libwhisperjni.dylib
+        mv ./macos-binary-arm64/libwhisperjni.dylib ./src/main/resources/macos-arm64/libwhisperjni.dylib
+    - name: Set up Maven Central Repository
+      uses: actions/setup-java@v1
+      with:
+        java-version: 17
+        server-id: sonatype-nexus-staging
+        server-username: MAVEN_USERNAME
+        server-password: MAVEN_PASSWORD
+        gpg-private-key: ${{ secrets.MAVEN_GPG_PRIVATE_KEY }}
+        gpg-passphrase: MAVEN_GPG_PASSPHRASE
+    - name: Deploy with Maven
+      run: mvn -B clean deploy -Pci-cd
+      env:
+        MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
+        MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
+        MAVEN_GPG_PASSPHRASE: ${{ secrets.MAVEN_GPG_PASSPHRASE }}
