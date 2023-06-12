@@ -35,7 +35,7 @@ jobs:
           mkdir -p dist
       - name: Build native library
         run: |
-          docker build -f dockerfile . -t whisperjni_binary:x86_64 --load
+          docker build --build-arg="RUN_TESTS=true" -f dockerfile . -t whisperjni_binary:x86_64 --load
           docker run --platform=amd64 -v $(pwd)/dist:/out whisperjni_binary:x86_64 bash -c "cp src/main/resources/debian-amd64/*.so /out/"
       - name: Artifact debian x86_64
         uses: actions/upload-artifact@v3
@@ -61,7 +61,7 @@ jobs:
           mkdir -p dist
       - name: Build native library
         run: |
-          docker build -f dockerfile . -t whisperjni_binary:arm64 --platform arm64 --load --build-arg "RUN_TESTS=0"
+          docker build -f dockerfile . -t whisperjni_binary:arm64 --platform arm64 --load
           DOCKER_BUILDKIT=1 docker run --platform=arm64 -v $(pwd)/dist:/out whisperjni_binary:arm64 bash -c "cp src/main/resources/debian-arm64/*.so /out/"
       - name: Artifact debian arm64
         uses: actions/upload-artifact@v3
