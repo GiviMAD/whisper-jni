@@ -155,7 +155,7 @@ jobs:
         mv ./debian-binary-amd64/libwhisperjni.so ./src/main/resources/debian-amd64/libwhisperjni.so
         mv ./debian-binary-arm64/libwhisperjni.so ./src/main/resources/debian-arm64/libwhisperjni.so
         mv ./windows-binary-x86_64/libwhisperjni.dll ./src/main/resources/win-amd64/libwhisperjni.dll
-        mv ./macos-binary-x86_64/libwhisperjni.dylib ./src/main/resources/macos-amd64/libwhisperjni.dylib
+        mv ./macos-binary-amd64/libwhisperjni.dylib ./src/main/resources/macos-amd64/libwhisperjni.dylib
         mv ./macos-binary-arm64/libwhisperjni.dylib ./src/main/resources/macos-arm64/libwhisperjni.dylib
     - name: Set up Maven Central Repository
       uses: actions/setup-java@v1
