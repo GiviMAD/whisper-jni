@@ -6,6 +6,8 @@
 
     <groupId>io.github.givimad</groupId>
     <artifactId>whisper-jni</artifactId>
+    <name>whisper-jni</name>
+    <url>https://github.com/GiviMAD/whisper-jni</url>
     <version>1.4.2</version>
     <description>A JNI wrapper for using whisper.cpp in Java</description>
     
