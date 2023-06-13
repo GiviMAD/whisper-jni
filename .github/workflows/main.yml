@@ -145,6 +145,8 @@ jobs:
     if: startsWith(github.ref, 'refs/tags/')
     needs: [build-lib-debian-x86_64,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v2
     - uses: actions/download-artifact@v3
