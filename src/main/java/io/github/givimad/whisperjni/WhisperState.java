@@ -2,7 +2,10 @@ package io.github.givimad.whisperjni;
 
 
 /**
- * The {@link WhisperState} represents a whisper_state, useful for thread safe mode sharing.
+ * The {@link WhisperState} represents a whisper_state, useful for thread safe context sharing.
+ *
+ * You need to dispose the native memory for its instances by calling {@link #close}
+ * or {@link WhisperJNI#free(WhisperState)}
  *
  * @author Miguel Álvarez Díez - Initial contribution
  */
@@ -24,10 +27,6 @@ public class WhisperState extends WhisperJNI.WhisperJNIPointer {
     }
     @Override
     public void close() {
-        if(isReleased()) {
-            return;
-        }
-        super.close();
-        whisper.freeState(ref);
+        whisper.free(this);
     }
 }

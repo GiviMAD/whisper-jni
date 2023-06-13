@@ -25,26 +25,10 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
- * Method:    freeContext
- * Signature: (I)V
- */
-JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeContext
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    initState
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     io_github_givimad_whisperjni_WhisperJNI
- * Method:    freeState
- * Signature: (I)V
- */
-JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState
   (JNIEnv *, jobject, jint);
 
 /*
@@ -65,18 +49,18 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullWithStat
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
- * Method:    fullNSegmentsFromState
- * Signature: (I)I
- */
-JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegmentsFromState
-  (JNIEnv *, jobject, jint);
-
-/*
- * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    fullNSegments
  * Signature: (I)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegments
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    fullNSegmentsFromState
+ * Signature: (I)I
+ */
+JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegmentsFromState
   (JNIEnv *, jobject, jint);
 
 /*
@@ -94,6 +78,22 @@ JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSe
  */
 JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTextFromState
   (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    freeContext
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeContext
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    freeState
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState
+  (JNIEnv *, jobject, jint);
 
 #ifdef __cplusplus
 }

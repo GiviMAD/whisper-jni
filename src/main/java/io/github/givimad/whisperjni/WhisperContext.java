@@ -3,6 +3,8 @@ package io.github.givimad.whisperjni;
 /**
  * The {@link WhisperContext} class represents a native whisper.cpp context.
  *
+ * You need to dispose the native memory for its instances by calling {@link #close}
+ * or {@link WhisperJNI#free(WhisperContext)}
  *
  * @author Miguel Álvarez Díez - Initial contribution
  */
@@ -20,10 +22,6 @@ public class WhisperContext extends WhisperJNI.WhisperJNIPointer {
     }
     @Override
     public void close() {
-        if(isReleased()) {
-            return;
-        }
-        super.close();
-        whisper.freeContext(ref);
+        whisper.free(this);
     }
 }

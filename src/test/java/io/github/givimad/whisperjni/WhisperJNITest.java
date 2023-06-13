@@ -10,6 +10,8 @@ import java.io.IOException;
 import java.nio.file.Path;
 
 import static junit.framework.TestCase.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 
 public class WhisperJNITest {
     Path testModelPath = Path.of("ggml-tiny.bin");
@@ -31,68 +33,92 @@ public class WhisperJNITest {
     }
 
     @Test
-    public void testInit() throws Exception {
+    public void testInit() throws IOException {
         var ctx = whisper.init(testModelPath);
+        assertNotNull(ctx);
         ctx.close();
     }
 
     @Test
-    public void testInitNoState() throws Exception {
+    public void testInitNoState() throws IOException {
         var ctx = whisper.initNoState(testModelPath);
+        assertNotNull(ctx);
         ctx.close();
     }
 
     @Test
-    public void testNewState() throws Exception {
-        var ctx = whisper.initNoState(testModelPath);
-        try {
+    public void testNewState() throws IOException {
+        try (var ctx = whisper.initNoState(testModelPath)) {
+            assertNotNull(ctx);
             WhisperState state = whisper.initState(ctx);
+            assertNotNull(state);
             state.close();
-        } finally {
-            ctx.close();
         }
+    }
+    @Test
+    public void testSegmentIndexException() throws IOException {
+        var ctx = whisper.init(testModelPath);
+        Exception exception = assertThrows(IndexOutOfBoundsException.class, () -> {
+            whisper.fullGetSegmentText(ctx, 1);
+        });
+        ctx.close();
+        assertEquals("Index out of range", exception.getMessage());
+    }
+    @Test
+    public void testPointerUnavailableException() throws UnsupportedAudioFileException, IOException {
+        var ctx = whisper.init(testModelPath);
+        float[] samples = readJFKFileSamples();
+        var params = new WhisperFullParams();
+        ctx.close();
+        Exception exception = assertThrows(RuntimeException.class, () -> {
+            whisper.full(ctx, params, samples, samples.length);
+        });
+        assertEquals("Unavailable pointer, object is closed", exception.getMessage());
     }
     @Test
     public void testFull() throws Exception {
         float[] samples = readJFKFileSamples();
-        var ctx = whisper.init(testModelPath);
-        var params = new WhisperFullParams();
-        int result = whisper.full(ctx, params, samples, samples.length);
-        if(result != 0) {
-            throw new RuntimeException("Transcription failed with code " + result);
+        try (var ctx = whisper.init(testModelPath)) {
+            var params = new WhisperFullParams();
+            int result = whisper.full(ctx, params, samples, samples.length);
+            if(result != 0) {
+                throw new RuntimeException("Transcription failed with code " + result);
+            }
+            int numSegments = whisper.fullNSegments(ctx);
+            assertEquals(1, numSegments);
+            String text = whisper.fullGetSegmentText(ctx,0);
+            assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
         }
-        int numSegments = whisper.fullNSegments(ctx);
-        assertEquals(1, numSegments);
-        String text = whisper.fullGetSegmentText(ctx,0);
-        assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
-        ctx.close();
     }
     @Test
-    public void testFullwithState() throws Exception {
+    public void testFullWithState() throws Exception {
         float[] samples = readJFKFileSamples();
-        var ctx = whisper.initNoState(testModelPath);
-        var params = new WhisperFullParams();
-        var state = whisper.initState(ctx);
-        int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
-        if(result != 0) {
-            throw new RuntimeException("Transcription failed with code " + result);
+        try (var ctx = whisper.initNoState(testModelPath)) {
+            var params = new WhisperFullParams();
+            try (var state = whisper.initState(ctx)) {
+                int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
+                if(result != 0) {
+                    throw new RuntimeException("Transcription failed with code " + result);
+                }
+                int numSegments = whisper.fullNSegmentsFromState(state);
+                assertEquals(1, numSegments);
+                String text = whisper.fullGetSegmentTextFromState(state,0);
+                assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
+            }
         }
-        int numSegments = whisper.fullNSegmentsFromState(state);
-        assertEquals(1, numSegments);
-        String text = whisper.fullGetSegmentTextFromState(state,0);
-        assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
-        state.close();
-        ctx.close();
     }
 
     private float[] readJFKFileSamples() throws UnsupportedAudioFileException, IOException {
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(samplePath.toFile());
         byte[] b = new byte[audioInputStream.available()];
         float[] samples = new float[b.length / 2];
-        audioInputStream.read(b);
+        int read = audioInputStream.read(b);
+        if (read == -1) {
+            throw new IOException("Empty file");
+        }
         for (int i = 0, j = 0; i < b.length; i += 2, j++) {
             int intSample = (int) (b[i + 1]) << 8 | (int) (b[i]) & 0xFF;
-            samples[j] = intSample / 32767.0f;
+            samples[j] = intSample / ((float) Short.MAX_VALUE);
         }
         return samples;
     }

@@ -13,22 +13,21 @@ import java.nio.file.Path;
 public class WhisperJNI {
     private static boolean libraryLoaded;
 
+//region native api
+
     private native int init(String model);
     private native int initNoState(String model);
     private native int initState(int model);
-
-    /**
-     * Release context memory by id
-     * @param context the pointer id
-     */
-    protected native void freeContext(int context);
-    /**
-     * Release context memory by id
-     * @param state the pointer id
-     */
-    protected native void freeState(int state);
     private native int full(int context, WhisperFullParams params, float[] samples, int numSamples);
     private native int fullWithState(int context, int state, WhisperFullParams params, float[] samples, int numSamples);
+    private native int fullNSegments(int context);
+    private native int fullNSegmentsFromState(int state);
+    private native String fullGetSegmentText(int context, int index);
+    private native String fullGetSegmentTextFromState(int state, int index);
+    private native void freeContext(int context);
+    private native void freeState(int state);
+
+//endregion
 
     /**
      * Creates a new whisper context.
@@ -37,8 +36,10 @@ public class WhisperJNI {
      *
      * @return A new {@link WhisperContext}.
      */
-    public WhisperContext init(Path model) {
-        return new WhisperContext(this, init(model.toAbsolutePath().toString()));
+    public WhisperContext init(Path model) throws IOException {
+        var absModelPath = model.toAbsolutePath();
+        assertModelExists(model, absModelPath);
+        return new WhisperContext(this, init(absModelPath.toString()));
     }
 
     /**
@@ -48,9 +49,12 @@ public class WhisperJNI {
      *
      * @return A new {@link WhisperContext} without state.
      */
-    public WhisperContext initNoState(Path model) {
-        return new WhisperContext(this, initNoState(model.toAbsolutePath().toString()));
+    public WhisperContext initNoState(Path model) throws IOException {
+        var absModelPath = model.toAbsolutePath();
+        assertModelExists(model, absModelPath);
+        return new WhisperContext(this, initNoState(absModelPath.toString()));
     }
+
     /**
      * Creates a new whisper.cpp state for the provided context.
      *
@@ -59,6 +63,7 @@ public class WhisperJNI {
      * @return A new {@link WhisperContext}.
      */
     public WhisperState initState(WhisperContext context) {
+        WhisperJNIPointer.assertAvailable(context);
         return new WhisperState(this, initState(context.ref), context);
     }
 
@@ -72,6 +77,7 @@ public class WhisperJNI {
      * @return a result code, values other than 0 indicates problems.
      */
     public int full(WhisperContext context, WhisperFullParams params, float[] samples, int numSamples) {
+        WhisperJNIPointer.assertAvailable(context);
         return full(context.ref, params, samples, numSamples);
     }
 
@@ -86,9 +92,10 @@ public class WhisperJNI {
      * @return a result code, values other than 0 indicates problems.
      */
     public int fullWithState(WhisperContext context, WhisperState state, WhisperFullParams params, float[] samples, int numSamples) {
+        WhisperJNIPointer.assertAvailable(context);
+        WhisperJNIPointer.assertAvailable(state);
         return fullWithState(context.ref, state.ref, params, samples, numSamples);
     }
-    private native int fullNSegmentsFromState(int state);
 
     /**
      * Gets the available number of text segments.
@@ -98,9 +105,9 @@ public class WhisperJNI {
      * @return available number of segments
      */
     public int fullNSegmentsFromState(WhisperState state) {
+        WhisperJNIPointer.assertAvailable(state);
         return fullNSegmentsFromState(state.ref);
     }
-    private native int fullNSegments(int context);
 
     /**
      * Gets the available number of text segments.
@@ -109,9 +116,9 @@ public class WhisperJNI {
      * @return available number of segments
      */
     public int fullNSegments(WhisperContext context){
+        WhisperJNIPointer.assertAvailable(context);
         return fullNSegments(context.ref);
     }
-    private native String fullGetSegmentText(int context, int index);
 
     /**
      * Gets text segment by index.
@@ -121,9 +128,9 @@ public class WhisperJNI {
      * @return the segment text
      */
     public String fullGetSegmentText(WhisperContext context, int index) {
+        WhisperJNIPointer.assertAvailable(context);
         return fullGetSegmentText(context.ref, index);
     }
-    private native String fullGetSegmentTextFromState(int state, int index);
 
     /**
      * Gets text segment by index.
@@ -133,6 +140,7 @@ public class WhisperJNI {
      * @return the segment text
      */
     public String fullGetSegmentTextFromState(WhisperState state, int index) {
+        WhisperJNIPointer.assertAvailable(state);
         return fullGetSegmentTextFromState(state.ref, index);
     }
 
@@ -142,7 +150,11 @@ public class WhisperJNI {
      * @param context the {@link WhisperContext} to release
      */
     public void free(WhisperContext context) {
-        context.close();
+        if (context.isReleased()) {
+            return;
+        }
+        context.release();
+        freeContext(context.ref);
     }
 
     /**
@@ -151,7 +163,11 @@ public class WhisperJNI {
      * @param state the {@link WhisperState} to release
      */
     public void free(WhisperState state) {
-        state.close();
+        if (state.isReleased()) {
+            return;
+        }
+        state.release();
+        freeState(state.ref);
     }
 
 
@@ -192,15 +208,28 @@ public class WhisperJNI {
     }
 
     /**
-     * In order to avoid sharing pointers between the java and the native implementation we use this
-     * util base class and a random integer id generated by the native wrapper.
+     * In order to avoid sharing pointers between the c++ and java, we use this
+     * util base class which holds a random integer id generated in the whisper.cpp wrapper.
+     *
+     * @author Miguel Álvarez Díez - Initial contribution
      */
     protected static abstract class WhisperJNIPointer implements AutoCloseable {
         /**
          * Native pointer reference identifier.
          */
         protected final int ref;
-        private boolean released = false;
+        private boolean released;
+
+        /**
+         * Asserts the provided pointer is still available.
+         *
+         * @param pointer a {@link WhisperJNIPointer} instance representing a pointer.
+         */
+        protected static void assertAvailable(WhisperJNIPointer pointer) {
+            if (pointer.isReleased()) {
+                throw new RuntimeException("Unavailable pointer, object is closed");
+            }
+        }
 
         /**
          * Creates a new object used to represent a struct pointer on the native library.
@@ -211,15 +240,24 @@ public class WhisperJNI {
         }
 
         /**
-         * Return true after native memory was free
+         * Return true if native memory is free
          * @return a boolean indicating if the native data was already released
          */
         protected boolean isReleased() {
             return released;
         }
-        public void close() {
+
+        /**
+         * Mark the point as released
+         */
+        protected void release() {
             released = true;
         }
+    }
 
+    private static void assertModelExists(Path model, Path path) throws IOException {
+        if (!model.toFile().exists() || !model.toFile().isFile()) {
+            throw new IOException("Missing model file: " + path);
+        }
     }
 }
