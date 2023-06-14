@@ -85,7 +85,7 @@ jobs:
       #     maven-version: 3.9.2
       - name: Setup project dir
         run: |
-          choco upgrade mingw
+          # choco upgrade mingw
           git submodule update --init
           mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
           mkdir dist
