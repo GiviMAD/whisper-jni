@@ -1,20 +1,27 @@
 # WhisperJNI
 
-A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), it allows basic usage of the library in Java.
+A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), it allows using the library in Java.
 
-# Platform support 
+## Platform support 
 
-This library support the following systems:
+This library aims to support the following platforms:
+
 * Windows x86_64
 * Debian x86_64/arm64
 * macOS x86_64/arm64
 
-The native binaries for those platforms are included.
+The native binaries for those platforms are included in the distributed jar.
 
-The library has been tested on in all the supported platforms unless macOS arm64.
+The library has been tested on all the supported platforms unless macOS arm64.
 
-Is have been build with some features enabled that should be available in modern devices,
+The included binaries have been built with some features enabled that I think are available in most modern devices,
 please open an issue if you found it don't work on any of the supported platforms.
+
+## Installation
+
+The package is distributed through [Maven Central](https://mvnrepository.com/artifact/io.github.givimad/whisper-jni).
+
+You can also find the package's jar attached to each [release](https://github.com/GiviMAD/whisper-jni/releases).
 
 ## Example
 
@@ -57,7 +64,9 @@ Finally you can run the project tests to confirm it works:
 mvn test
 ```
 
-If you want to implement any new api you need to:
+## Extending the native api
+
+If you want add any missing whisper.cpp functionality you need to:
 
 * Add the native method description in src/main/java/io/github/givimad/whisperjni/WhisperJNI.java.
 * Run the gen_header.sh script to regenerate the src/main/native/io_github_givimad_whisperjni_WhisperJNI.h header file. 
