@@ -19,7 +19,7 @@ please open an issue if you found it don't work on any of the supported platform
 
 ## Installation
 
-The package is distributed through [Maven Central](https://mvnrepository.com/artifact/io.github.givimad/whisper-jni).
+The package is distributed through [Maven Central](https://central.sonatype.com/artifact/io.github.givimad/whisper-jni).
 
 You can also find the package's jar attached to each [release](https://github.com/GiviMAD/whisper-jni/releases).
 
