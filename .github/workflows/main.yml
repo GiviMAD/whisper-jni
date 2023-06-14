@@ -173,7 +173,9 @@ jobs:
       run: |
         mvn -B clean deploy -DskipTests -Pci-cd
         VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+        WHISPER_VERSION=$(echo "${VERSION%%"-"*}")
         echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+        echo "WHISPER_VERSION=$WHISPER_VERSION" >> $GITHUB_OUTPUT
       env:
         MAVEN_USERNAME: ${{ secrets.OSSRH_USERNAME }}
         MAVEN_PASSWORD: ${{ secrets.OSSRH_TOKEN }}
@@ -187,7 +189,7 @@ jobs:
         draft: false
         prerelease: false
         generate_release_notes: false
-        body: A JNI wrapper over whisper.cpp v${{ steps.deploy.outputs.VERSION }}
+        body: A JNI wrapper over whisper.cpp v${{ steps.deploy.outputs.WHISPER_VERSION }}
         files: |
           target/whisper-jni-${{ steps.deploy.outputs.VERSION }}.jar
       env:

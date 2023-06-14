@@ -18,6 +18,7 @@ public class WhisperJNI {
     private native int init(String model);
     private native int initNoState(String model);
     private native int initState(int model);
+    private native boolean isMultilingual(int model);
     private native int full(int context, WhisperFullParams params, float[] samples, int numSamples);
     private native int fullWithState(int context, int state, WhisperFullParams params, float[] samples, int numSamples);
     private native int fullNSegments(int context);
@@ -35,6 +36,7 @@ public class WhisperJNI {
      * @param model {@link Path} to the whisper ggml model file.
      *
      * @return A new {@link WhisperContext}.
+     * @throws IOException if model file is missing.
      */
     public WhisperContext init(Path model) throws IOException {
         var absModelPath = model.toAbsolutePath();
@@ -48,6 +50,7 @@ public class WhisperJNI {
      * @param model {@link Path} to the whisper ggml model file.
      *
      * @return A new {@link WhisperContext} without state.
+     * @throws IOException if model file is missing.
      */
     public WhisperContext initNoState(Path model) throws IOException {
         var absModelPath = model.toAbsolutePath();
@@ -58,13 +61,25 @@ public class WhisperJNI {
     /**
      * Creates a new whisper.cpp state for the provided context.
      *
-     * @param context {@link WhisperContext} to the whisper ggml model file.
+     * @param context the {@link WhisperContext} of this state.
      *
      * @return A new {@link WhisperContext}.
      */
     public WhisperState initState(WhisperContext context) {
         WhisperJNIPointer.assertAvailable(context);
         return new WhisperState(this, initState(context.ref), context);
+    }
+
+    /**
+     * Is multilingual.
+     *
+     * @param context the {@link WhisperContext} to check.
+     *
+     * @return true if model support multiple languages
+     */
+    public boolean isMultilingual(WhisperContext context) {
+        WhisperJNIPointer.assertAvailable(context);
+        return isMultilingual(context.ref);
     }
 
     /**

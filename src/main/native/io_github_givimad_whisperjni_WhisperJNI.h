@@ -33,6 +33,14 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    isMultilingual
+ * Signature: (I)Z
+ */
+JNIEXPORT jboolean JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_isMultilingual
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    full
  * Signature: (ILio/github/givimad/whisperjni/WhisperFullParams;[FI)I
  */

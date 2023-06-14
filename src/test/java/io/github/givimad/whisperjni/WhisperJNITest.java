@@ -12,6 +12,7 @@ import java.nio.file.Path;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.assertTrue;
 
 public class WhisperJNITest {
     Path testModelPath = Path.of("ggml-tiny.bin");
@@ -45,7 +46,13 @@ public class WhisperJNITest {
         assertNotNull(ctx);
         ctx.close();
     }
-
+    @Test
+    public void testContextIsMultilingual() throws IOException {
+        var ctx = whisper.initNoState(testModelPath);
+        assertNotNull(ctx);
+        assertTrue(whisper.isMultilingual(ctx));
+        ctx.close();
+    }
     @Test
     public void testNewState() throws IOException {
         try (var ctx = whisper.initNoState(testModelPath)) {
