@@ -7,6 +7,8 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
 import java.io.IOException;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.file.Path;
 
 import static junit.framework.TestCase.assertEquals;
@@ -116,16 +118,22 @@ public class WhisperJNITest {
     }
 
     private float[] readJFKFileSamples() throws UnsupportedAudioFileException, IOException {
+        // sample is a 16 bit int 16000hz little endian wav file
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(samplePath.toFile());
-        byte[] b = new byte[audioInputStream.available()];
-        float[] samples = new float[b.length / 2];
-        int read = audioInputStream.read(b);
+        // read all the available data to a little endian capture buffer
+        ByteBuffer captureBuffer = ByteBuffer.allocate(audioInputStream.available());
+        captureBuffer.order(ByteOrder.LITTLE_ENDIAN);
+        int read = audioInputStream.read(captureBuffer.array());
         if (read == -1) {
             throw new IOException("Empty file");
         }
-        for (int i = 0, j = 0; i < b.length; i += 2, j++) {
-            int intSample = (int) (b[i + 1]) << 8 | (int) (b[i]) & 0xFF;
-            samples[j] = intSample / ((float) Short.MAX_VALUE);
+        // obtain the 16 int audio samples, short type in java
+        var shortBuffer = captureBuffer.asShortBuffer();
+        // transform the samples to f32 samples
+        float[] samples = new float[captureBuffer.capacity() / 2];
+        var i = 0;
+        while (shortBuffer.hasRemaining()) {
+            samples[i++] = ((float)shortBuffer.get() / ((float) Short.MAX_VALUE));
         }
         return samples;
     }
