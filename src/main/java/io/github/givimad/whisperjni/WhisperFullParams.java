@@ -112,7 +112,7 @@ public class WhisperFullParams {
     /**
      * Specific to bean search sampling strategy
      */
-    public int beamSearchBeamSize = -1;
+    public int beamSearchBeamSize = 2;
     /**
      * Specific to bean search sampling strategy
      */
