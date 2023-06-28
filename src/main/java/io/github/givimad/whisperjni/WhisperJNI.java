@@ -3,7 +3,10 @@ package io.github.givimad.whisperjni;
 import io.github.givimad.whisperjni.internal.NativeUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.function.Consumer;
+import java.util.logging.Logger;
 
 /**
  * The {@link WhisperJNI} class allows to use whisper.cpp thought JNI.
@@ -185,7 +188,6 @@ public class WhisperJNI {
         freeState(state.ref);
     }
 
-
     /**
      * Register the native library, should be called at first.
      * @throws IOException when unable to load the native library
@@ -203,10 +205,32 @@ public class WhisperJNI {
             }
         } else if (osName.contains("nix") || osName.contains("nux")
                 || osName.contains("aix")) {
+            String cpuInfo;
+            try {
+                cpuInfo = Files.readString(Path.of("/proc/cpuinfo"));
+            } catch (IOException ignored) {
+                cpuInfo = "";
+            }
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                bundleLibraryPath = "/debian-amd64/libwhisperjni.so";
+                if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
+                    bundleLibraryPath = "/debian-amd64/libwhisperjni+mf16c+mfma+mavx+mavx2.so";
+                } else {
+                    bundleLibraryPath = "/debian-amd64/libwhisperjni.so";
+                }
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                bundleLibraryPath = "/debian-arm64/libwhisperjni.so";
+                if(cpuInfo.contains("fphp")) {
+                    bundleLibraryPath = "/debian-arm64/libwhisperjni+fp16.so";
+                } else if(cpuInfo.contains("crc32")) {
+                    bundleLibraryPath = "/debian-arm64/libwhisperjni+crc.so";
+                } else {
+                    bundleLibraryPath = "/debian-arm64/libwhisperjni.so";
+                }
+            } else if(osArch.contains("armv7") || osArch.contains("arm")) {
+                if(cpuInfo.contains("crc32")) {
+                    bundleLibraryPath = "/debian-armv7l/libwhisperjni+crc.so";
+                } else {
+                    bundleLibraryPath = "/debian-armv7l/libwhisperjni.so";
+                }
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {

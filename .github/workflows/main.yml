@@ -41,7 +41,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: debian-binary-amd64
-          path: dist/libwhisperjni.so
+          path: dist/*.so
 
   build-lib-debian-arm64:
     needs: [download-model]
@@ -67,7 +67,33 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: debian-binary-arm64
-          path: dist/libwhisperjni.so
+          path: dist/*.so
+
+  build-lib-debian-arm:
+    needs: [download-model]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/download-artifact@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      - name: Docker Setup Buildx
+        uses: docker/setup-buildx-action@v1.6.0
+        with:
+          install: true
+      - name: Setup project dir
+        run: |
+          mv ./tiny-ggml-model/ggml-tiny.bin ./ggml-tiny.bin
+          mkdir -p dist
+      - name: Build native library
+        run: |
+          docker build -f dockerfile . -t whisperjni_binary:armv7l --platform arm --load
+          DOCKER_BUILDKIT=1 docker run --platform=arm -v $(pwd)/dist:/out whisperjni_binary:armv7l bash -c "cp src/main/resources/debian-armv7l/*.so /out/"
+      - name: Artifact debian armv7l
+        uses: actions/upload-artifact@v3
+        with:
+          name: debian-binary-armv7l
+          path: dist/*.so
 
   build-lib-windows:
     needs: [download-model]
@@ -143,7 +169,7 @@ jobs:
 
   deploy:
     if: startsWith(github.ref, 'refs/tags/')
-    needs: [build-lib-debian-x86_64,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
+    needs: [build-lib-debian-x86_64,build-lib-debian-arm,build-lib-debian-arm64,build-lib-windows,build-lib-macos]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -154,8 +180,9 @@ jobs:
       run: ls -R
     - name: setup resources
       run: |
-        mv ./debian-binary-amd64/libwhisperjni.so ./src/main/resources/debian-amd64/libwhisperjni.so
-        mv ./debian-binary-arm64/libwhisperjni.so ./src/main/resources/debian-arm64/libwhisperjni.so
+        mv ./debian-binary-amd64/*.so ./src/main/resources/debian-amd64/
+        mv ./debian-binary-arm64/*.so ./src/main/resources/debian-arm64/
+        mv ./debian-binary-armv7l/*.so ./src/main/resources/debian-armv7l/
         mv ./windows-binary-x86_64/libwhisperjni.dll ./src/main/resources/win-amd64/libwhisperjni.dll
         mv ./macos-binary-amd64/libwhisperjni.dylib ./src/main/resources/macos-amd64/libwhisperjni.dylib
         mv ./macos-binary-arm64/libwhisperjni.dylib ./src/main/resources/macos-arm64/libwhisperjni.dylib
