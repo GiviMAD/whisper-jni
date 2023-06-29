@@ -6,9 +6,9 @@ A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), it al
 
 This library aims to support the following platforms:
 
-* Windows x86_64
-* Debian x86_64/arm64
-* macOS x86_64/arm64
+* Windows x86_64 (built with mingw)
+* Debian x86_64/arm64 (built with GLIBC 2.31)
+* macOS x86_64/arm64 (built targeting v11.0)
 
 The native binaries for those platforms are included in the distributed jar.
 
