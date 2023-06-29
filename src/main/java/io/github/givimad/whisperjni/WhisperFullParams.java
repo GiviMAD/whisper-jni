@@ -78,6 +78,10 @@ public class WhisperFullParams {
      */
     public boolean suppressNonSpeechTokens;
     /**
+     * Speed-up the audio by 2x using Phase Vocoder
+     */
+    public boolean speedUp;
+    /**
      * Initial decoding temperature
      */
     public float temperature = 0.0f;
