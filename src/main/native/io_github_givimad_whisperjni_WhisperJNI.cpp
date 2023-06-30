@@ -120,6 +120,32 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegment
   return whisper_full_n_segments_from_state(stateMap.at(stateRef));
 }
 
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp0(JNIEnv *env, jobject thisObject, jint ctxRef, jint index)
+{
+  whisper_context *whisper_ctx = contextMap.at(ctxRef);
+  int nSegments = whisper_full_n_segments(whisper_ctx);
+  if (nSegments < index + 1)
+  {
+    jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
+    env->ThrowNew(exClass, "Index out of range");
+    return NULL;
+  }
+  return whisper_full_get_segment_t0(whisper_ctx, index);
+}
+
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp1(JNIEnv *env, jobject thisObject, jint ctxRef, jint index)
+{
+  whisper_context *whisper_ctx = contextMap.at(ctxRef);
+  int nSegments = whisper_full_n_segments(whisper_ctx);
+  if (nSegments < index + 1)
+  {
+    jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
+    env->ThrowNew(exClass, "Index out of range");
+    return NULL;
+  }
+  return whisper_full_get_segment_t1(whisper_ctx, index);
+}
+
 JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentText(JNIEnv *env, jobject thisObject, jint ctxRef, jint index)
 {
   whisper_context *whisper_ctx = contextMap.at(ctxRef);
@@ -132,6 +158,36 @@ JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSe
   }
   const char *text = whisper_full_get_segment_text(whisper_ctx, index);
   return env->NewStringUTF(text);
+}
+
+
+
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp0FromState(JNIEnv *env, jobject thisObject, jint stateRef, jint index)
+{
+  whisper_state *state = stateMap.at(stateRef);
+  int nSegments = whisper_full_n_segments_from_state(state);
+  if (nSegments < index + 1)
+  {
+    jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
+    env->ThrowNew(exClass, "Index out of range");
+    return NULL;
+  }
+  return whisper_full_get_segment_t0_from_state(state, index);
+}
+
+
+
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp1FromState(JNIEnv *env, jobject thisObject, jint stateRef, jint index)
+{
+  whisper_state *state = stateMap.at(stateRef);
+  int nSegments = whisper_full_n_segments_from_state(state);
+  if (nSegments < index + 1)
+  {
+    jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
+    env->ThrowNew(exClass, "Index out of range");
+    return NULL;
+  }
+  return whisper_full_get_segment_t1_from_state(state, index);
 }
 
 JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTextFromState(JNIEnv *env, jobject thisObject, jint stateRef, jint index)

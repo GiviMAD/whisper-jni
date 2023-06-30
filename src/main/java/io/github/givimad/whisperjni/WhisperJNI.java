@@ -26,7 +26,11 @@ public class WhisperJNI {
     private native int fullWithState(int context, int state, WhisperFullParams params, float[] samples, int numSamples);
     private native int fullNSegments(int context);
     private native int fullNSegmentsFromState(int state);
+    private native long fullGetSegmentTimestamp0(int context, int index);
+    private native long fullGetSegmentTimestamp1(int context, int index);
     private native String fullGetSegmentText(int context, int index);
+    private native long fullGetSegmentTimestamp0FromState(int state, int index);
+    private native long fullGetSegmentTimestamp1FromState(int state, int index);
     private native String fullGetSegmentTextFromState(int state, int index);
     private native void freeContext(int context);
     private native void freeState(int state);
@@ -139,6 +143,30 @@ public class WhisperJNI {
     }
 
     /**
+     * Gets start timestamp of text segment by index.
+     *
+     * @param context a {@link WhisperContext} used to transcribe
+     * @param index the segment index
+     * @return start timestamp of segment text, like 800 means 8s
+     */
+    public long fullGetSegmentTimestamp0(WhisperContext context, int index) {
+        WhisperJNIPointer.assertAvailable(context);
+        return fullGetSegmentTimestamp0(context.ref, index);
+    }
+
+    /**
+     * Gets end timestamp of text segment by index.
+     *
+     * @param context a {@link WhisperContext} used to transcribe
+     * @param index the segment index
+     * @return end timestamp of segment text
+     */
+    public long fullGetSegmentTimestamp1(WhisperContext context, int index) {
+        WhisperJNIPointer.assertAvailable(context);
+        return fullGetSegmentTimestamp1(context.ref, index);
+    }
+
+    /**
      * Gets text segment by index.
      *
      * @param context a {@link WhisperContext} used to transcribe
@@ -148,6 +176,30 @@ public class WhisperJNI {
     public String fullGetSegmentText(WhisperContext context, int index) {
         WhisperJNIPointer.assertAvailable(context);
         return fullGetSegmentText(context.ref, index);
+    }
+
+    /**
+     * Gets start timestamp of text segment by index.
+     *
+     * @param state a {@link WhisperState} used to transcribe
+     * @param index the segment index
+     * @return start timestamp of segment text
+     */
+    public long fullGetSegmentTimestamp0FromState(WhisperState state, int index) {
+        WhisperJNIPointer.assertAvailable(state);
+        return fullGetSegmentTimestamp0FromState(state.ref, index);
+    }
+
+    /**
+     * Gets end timestamp of text segment by index.
+     *
+     * @param state a {@link WhisperState} used to transcribe
+     * @param index the segment index
+     * @return end timestamp of segment text
+     */
+    public long fullGetSegmentTimestamp1FromState(WhisperState state, int index) {
+        WhisperJNIPointer.assertAvailable(state);
+        return fullGetSegmentTimestamp1FromState(state.ref, index);
     }
 
     /**

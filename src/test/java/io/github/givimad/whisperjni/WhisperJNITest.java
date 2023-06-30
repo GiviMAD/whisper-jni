@@ -95,7 +95,11 @@ public class WhisperJNITest {
             }
             int numSegments = whisper.fullNSegments(ctx);
             assertEquals(1, numSegments);
+            long startTime = whisper.fullGetSegmentTimestamp0(ctx,0);
+            long endTime = whisper.fullGetSegmentTimestamp1(ctx,0);
             String text = whisper.fullGetSegmentText(ctx,0);
+            assertEquals(0, startTime);
+            assertEquals(1050, endTime);
             assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
         }
     }
@@ -128,7 +132,11 @@ public class WhisperJNITest {
                 }
                 int numSegments = whisper.fullNSegmentsFromState(state);
                 assertEquals(1, numSegments);
+                long startTime = whisper.fullGetSegmentTimestamp0FromState(state,0);
+                long endTime = whisper.fullGetSegmentTimestamp1FromState(state,0);
                 String text = whisper.fullGetSegmentTextFromState(state,0);
+                assertEquals(0, startTime);
+                assertEquals(1050, endTime);
                 assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
             }
         }

@@ -71,12 +71,48 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegment
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegmentsFromState
   (JNIEnv *, jobject, jint);
 
+
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    fullGetSegmentTimestamp0
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp0
+  (JNIEnv *, jobject, jint, jint);
+
+
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    fullGetSegmentTimestamp1
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp1
+  (JNIEnv *, jobject, jint, jint);
+
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    fullGetSegmentText
  * Signature: (II)Ljava/lang/String;
  */
 JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentText
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    fullGetSegmentTimestamp0FromState
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp0FromState
+  (JNIEnv *, jobject, jint, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    fullGetSegmentTimestamp1FromState
+ * Signature: (II)Ljava/lang/String;
+ */
+JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp1FromState
   (JNIEnv *, jobject, jint, jint);
 
 /*
