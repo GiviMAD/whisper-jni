@@ -177,7 +177,7 @@ public class WhisperJNITest {
         float[] samples = new float[captureBuffer.capacity() / 2];
         var i = 0;
         while (shortBuffer.hasRemaining()) {
-            samples[i++] = ((float)shortBuffer.get() / ((float) Short.MAX_VALUE));
+            samples[i++] = Float.max(-1f, Float.min(((float) shortBuffer.get()) / (float) Short.MAX_VALUE, 1f));
         }
         return samples;
     }
