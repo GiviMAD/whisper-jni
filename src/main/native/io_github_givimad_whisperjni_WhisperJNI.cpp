@@ -128,7 +128,7 @@ JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegm
   {
     jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
     env->ThrowNew(exClass, "Index out of range");
-    return NULL;
+    return 0L;
   }
   return whisper_full_get_segment_t0(whisper_ctx, index);
 }
@@ -141,7 +141,7 @@ JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegm
   {
     jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
     env->ThrowNew(exClass, "Index out of range");
-    return NULL;
+    return 0L;
   }
   return whisper_full_get_segment_t1(whisper_ctx, index);
 }
@@ -170,7 +170,7 @@ JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegm
   {
     jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
     env->ThrowNew(exClass, "Index out of range");
-    return NULL;
+    return 0L;
   }
   return whisper_full_get_segment_t0_from_state(state, index);
 }
@@ -185,7 +185,7 @@ JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegm
   {
     jclass exClass = env->FindClass("java/lang/IndexOutOfBoundsException");
     env->ThrowNew(exClass, "Index out of range");
-    return NULL;
+    return 0L;
   }
   return whisper_full_get_segment_t1_from_state(state, index);
 }
