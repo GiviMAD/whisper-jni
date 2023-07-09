@@ -1,6 +1,6 @@
 # WhisperJNI
 
-A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), it allows using the library in Java.
+A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allows transcribe speech to text in Java.
 
 ## Platform support 
 

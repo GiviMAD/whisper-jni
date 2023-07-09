@@ -9,7 +9,7 @@
     <name>whisper-jni</name>
     <url>https://github.com/GiviMAD/whisper-jni</url>
     <version>1.4.2-4</version>
-    <description>A JNI wrapper for using whisper.cpp in Java</description>
+    <description>A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allows transcribe speech to text in Java</description>
     
     <licenses>
         <license>
