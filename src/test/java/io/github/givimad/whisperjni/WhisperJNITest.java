@@ -26,7 +26,7 @@ public class WhisperJNITest {
         var modelFile = testModelPath.toFile();
         var sampleFile = samplePath.toFile();
         if(!modelFile.exists() || !modelFile.isFile()) {
-            throw new RuntimeException("Missing model file: " + testModelPath.toAbsolutePath().toString());
+            throw new RuntimeException("Missing model file: " + testModelPath.toAbsolutePath());
         }
         if(!sampleFile.exists() || !sampleFile.isFile()) {
             throw new RuntimeException("Missing sample file");
