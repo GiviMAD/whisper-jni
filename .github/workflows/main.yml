@@ -215,7 +215,7 @@ jobs:
         name: WhisperJNI v${{ steps.deploy.outputs.VERSION }}
         draft: false
         prerelease: false
-        generate_release_notes: false
+        generate_release_notes: true
         body: A JNI wrapper over whisper.cpp v${{ steps.deploy.outputs.WHISPER_VERSION }}
         files: |
           target/whisper-jni-${{ steps.deploy.outputs.VERSION }}.jar
