@@ -2,14 +2,22 @@
 set -xe
 build_lib() {
   INCLUDE_JAVA="-I${JAVA_HOME}/include -I${JAVA_HOME}/include/linux"
-  cc -O3 -DNDEBUG -std=c11 -fPIC -pthread $CFLAGS -c ./src/main/native/whisper/ggml.c -o ./src/main/native/ggml.o
-  g++ -c -std=c++11 -O3 -DNDEBUG -fPIC -pthread \
-  -I src/main/native/whisper/ $CXXFLAGS \
-  src/main/native/whisper/whisper.cpp -o src/main/native/whisper.o
-  g++ -c -std=c++11 -O3 -DNDEBUG -fPIC -pthread $CXXFLAGS -I src/main/native -I src/main/native/whisper $INCLUDE_JAVA \
-  src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o
-  g++ -shared $CXXFLAGS -fPIC -I src/main/native/whisper/ src/main/native/ggml.o src/main/native/whisper.o -o libwhisper.so
-  g++ -shared $CXXFLAGS -fPIC -I src/main/native/whisper/ -Wl,-rpath='${ORIGIN}' src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -L. -lwhisper -o libwhisperjni.so
+  CFLAGS="-std=c11 -O3 -DNDEBUG -fPIC -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -pthread $CFLAGS"
+  CXXFLAGS="-std=c++11 -O3 -DNDEBUG -fPIC -D_XOPEN_SOURCE=600 -D_GNU_SOURCE -pthread $CXXFLAGS"
+  # build ggml objects
+  cc $CFLAGS -c ./src/main/native/whisper/ggml.c -o ./src/main/native/ggml.o
+  cc $CFLAGS -c ./src/main/native/whisper/ggml-alloc.c -o ./src/main/native/ggml-alloc.o
+  cc $CFLAGS -c ./src/main/native/whisper/ggml-backend.c -o ./src/main/native/ggml-backend.o
+  cc $CFLAGS -c ./src/main/native/whisper/ggml-quants.c -o ./src/main/native/ggml-quants.o
+  # build whisper object
+  g++ -c -I src/main/native/whisper/ $CXXFLAGS src/main/native/whisper/whisper.cpp -o src/main/native/whisper.o
+  # build whisper jni wrapper object
+  g++ -c -I src/main/native -I src/main/native/whisper $INCLUDE_JAVA $CXXFLAGS src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o
+  # link whisper shared object
+  g++ -shared -I src/main/native/whisper/ src/main/native/ggml.o src/main/native/ggml-alloc.o src/main/native/ggml-backend.o src/main/native/ggml-quants.o src/main/native/whisper.o -o libwhisper.so
+  # link whisper jni wrapper shared object
+  g++ -shared -I src/main/native/whisper/ -Wl,-rpath='${ORIGIN}' src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -L. -lwhisper -o libwhisperjni.so
+  # clean
   mv libwhisper.so src/main/resources/debian-$AARCH/libwhisper$LIB_VARIANT.so
   mv libwhisperjni.so src/main/resources/debian-$AARCH/libwhisperjni.so
   rm -rf src/main/native/*.o

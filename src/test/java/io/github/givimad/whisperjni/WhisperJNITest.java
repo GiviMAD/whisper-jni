@@ -102,7 +102,7 @@ public class WhisperJNITest {
             String text = whisper.fullGetSegmentText(ctx,0);
             assertEquals(0, startTime);
             assertEquals(1050, endTime);
-            assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
+            assertEquals(" And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.", text);
         }
     }
 
@@ -139,7 +139,7 @@ public class WhisperJNITest {
                 String text = whisper.fullGetSegmentTextFromState(state,0);
                 assertEquals(0, startTime);
                 assertEquals(1050, endTime);
-                assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
+                assertEquals(" And so my fellow Americans ask not what your country can do for you, ask what you can do for your country.", text);
             }
         }
     }
