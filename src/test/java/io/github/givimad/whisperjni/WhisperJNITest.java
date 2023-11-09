@@ -31,7 +31,9 @@ public class WhisperJNITest {
         if(!sampleFile.exists() || !sampleFile.isFile()) {
             throw new RuntimeException("Missing sample file");
         }
-        WhisperJNI.loadLibrary();
+        var loadOptions = new WhisperJNI.LoadOptions();
+        loadOptions.logger = System.out::println;
+        WhisperJNI.loadLibrary(loadOptions);
         whisper = new WhisperJNI();
     }
 
