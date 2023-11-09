@@ -16,7 +16,6 @@ import java.util.function.Consumer;
 
 public class LibraryUtils {
     private static final String TEMP_FOLDER_PREFIX = "whisper-jni-";
-    private static final String PREFIX = "lib";
     private static Path libraryDir = null;
     private LibraryUtils() {
     }
@@ -58,9 +57,6 @@ public class LibraryUtils {
         if (null == path) {
             throw new IllegalArgumentException("Missing path.");
         }
-        if (!filename.startsWith(PREFIX)) {
-            throw new IllegalArgumentException("The filename should start by lib.");
-        }
         if(logger != null) {
             logger.accept("Extracting "+ path + " into " + libraryDir.resolve(filename));
         }
@@ -89,9 +85,6 @@ public class LibraryUtils {
         if (null == path || !path.startsWith("/")) {
             throw new IllegalArgumentException("The path has to be absolute (start with '/').");
         }
-        if (!filename.startsWith(PREFIX)) {
-            throw new IllegalArgumentException("The filename should start by lib.");
-        }
         if(logger != null) {
             logger.accept("Extracting "+ path + " into " + libraryDir.resolve(filename));
         }
@@ -117,17 +110,17 @@ public class LibraryUtils {
         String osName = System.getProperty("os.name").toLowerCase();
         String osArch = System.getProperty("os.arch").toLowerCase();
         if (osName.contains("win")) {
-            wrapperLibName = "libwhisperjni.dll";
+            wrapperLibName = "whisperjni.dll";
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
                 if(options.whisperJNILib == null){
                     options.logger.accept("Looking for whisper.dll in $env:PATH.");
                     if(isWhisperDLLInstalled()) {
-                        LibraryUtils.extractLibraryFromJar("/win-amd64/libwhisperjni.dll", "libwhisperjni.dll", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/win-amd64/whisperjni.dll", "whisperjni.dll", options.logger);
                     } else {
-                        LibraryUtils.extractLibraryFromJar("/win-amd64/libwhisperjni_full.dll", "libwhisperjni.dll", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/win-amd64/whisperjni_full.dll", "whisperjni.dll", options.logger);
                     }
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.dll", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperJNILib, "whisperjni.dll", options.logger);
                 }
             }
         } else if (osName.contains("nix") || osName.contains("nux")

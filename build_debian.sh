@@ -15,7 +15,6 @@ build_lib() {
   rm -rf src/main/native/*.o
 }
 AARCH=$(dpkg --print-architecture)
-build_lib
 case $AARCH in
   amd64)
     LIB_VARIANT="+mf16c+mfma+mavx+mavx2" CFLAGS="-mf16c -mfma -mavx -mavx2" CXXFLAGS="-mf16c -mfma -mavx -mavx2" build_lib
@@ -28,12 +27,7 @@ case $AARCH in
     ;;
   armhf|armv7l)
     AARCH=armv7l
-    CFLAGS="-mfpu=neon -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations" \
-    CXXFLAGS="" \
-    build_lib
-    LIB_VARIANT="+crc" \
-    CFLAGS="-march=armv8-a+crc -mfpu=neon-fp-armv8 -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations" \
-    CXXFLAGS="" \
-    build_lib
+    CFLAGS="-mfpu=neon -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations" CXXFLAGS="" build_lib
+    LIB_VARIANT="+crc" CFLAGS="-march=armv8-a+crc -mfpu=neon-fp-armv8 -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations" CXXFLAGS="" build_lib
     ;;
 esac

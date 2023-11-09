@@ -8,9 +8,9 @@ g++ -c -std=c++11 -O3 -DNDEBUG -fPIC -pthread -I $env:JAVA_HOME\include -I $env:
 
 g++ -shared -static -I src\main\native -I src\main\native\whisper -o whisper.dll src\main\native\whisper.o src\main\native\ggml.o
 
-g++ -shared -static -I src\main\native -I src\main\native\whisper -o src\main\resources\win-amd64\libwhisperjni_full.dll src\main\native\whisper.o src\main\native\ggml.o src\main\native\io_github_givimad_whisperjni_WhisperJNI.o
+g++ -shared -static -I src\main\native -I src\main\native\whisper -o src\main\resources\win-amd64\whisperjni_full.dll src\main\native\whisper.o src\main\native\ggml.o src\main\native\io_github_givimad_whisperjni_WhisperJNI.o
 
-g++ "-Wl,-Bdynamic,-lwhisper" "-Wl,-Bstatic" -shared -static -I src\main\native -I src\main\native\whisper -L. -o src\main\resources\win-amd64\libwhisperjni.dll src\main\native\io_github_givimad_whisperjni_WhisperJNI.o
+g++ "-Wl,-Bdynamic,-lwhisper" "-Wl,-Bstatic" -shared -static -I src\main\native -I src\main\native\whisper -L. -o src\main\resources\win-amd64\whisperjni.dll src\main\native\io_github_givimad_whisperjni_WhisperJNI.o
 
 if ($LastExitCode -ne 0) {
     Write-Error "Unable to build library"

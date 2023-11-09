@@ -120,12 +120,12 @@ jobs:
         run: |
           .\build_win.ps1
           # mvn test
-          mv src\main\resources\win-amd64\libwhisperjni.dll .\dist\
+          mv src\main\resources\win-amd64\*.dll .\dist\
       - name: Artifact windows x86_64
         uses: actions/upload-artifact@v3
         with:
           name: windows-binary-x86_64
-          path: dist/libwhisperjni.dll
+          path: dist/*.dll
 
   build-lib-macos:
     needs: [download-model]
@@ -154,18 +154,18 @@ jobs:
           ./build_macos.sh amd64
           ./build_macos.sh arm64
           # mvn test
-          mv src/main/resources/macos-amd64/libwhisperjni.dylib dist/
-          mv src/main/resources/macos-arm64/libwhisperjni.dylib dist_arm64/
+          mv src/main/resources/macos-amd64/*.dylib dist/
+          mv src/main/resources/macos-arm64/*.dylib dist_arm64/
       - name: Artifact macos amd64
         uses: actions/upload-artifact@v3
         with:
           name: macos-binary-amd64
-          path: dist/libwhisperjni.dylib
+          path: dist/*.dylib
       - name: Artifact macos arm64
         uses: actions/upload-artifact@v3
         with:
           name: macos-binary-arm64
-          path: dist_arm64/libwhisperjni.dylib
+          path: dist_arm64/*.dylib
 
   deploy:
     if: startsWith(github.ref, 'refs/tags/')
@@ -183,9 +183,9 @@ jobs:
         mv ./debian-binary-amd64/*.so ./src/main/resources/debian-amd64/
         mv ./debian-binary-arm64/*.so ./src/main/resources/debian-arm64/
         mv ./debian-binary-armv7l/*.so ./src/main/resources/debian-armv7l/
-        mv ./windows-binary-x86_64/libwhisperjni.dll ./src/main/resources/win-amd64/libwhisperjni.dll
-        mv ./macos-binary-amd64/libwhisperjni.dylib ./src/main/resources/macos-amd64/libwhisperjni.dylib
-        mv ./macos-binary-arm64/libwhisperjni.dylib ./src/main/resources/macos-arm64/libwhisperjni.dylib
+        mv ./windows-binary-x86_64/*.dll ./src/main/resources/win-amd64/
+        mv ./macos-binary-amd64/*.dylib ./src/main/resources/macos-amd64/
+        mv ./macos-binary-arm64/*.dylib ./src/main/resources/macos-arm64/
     - name: Set up Maven Central Repository
       uses: actions/setup-java@v1
       with:
