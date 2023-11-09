@@ -1,15 +1,14 @@
 package io.github.givimad.whisperjni;
 
-import io.github.givimad.whisperjni.internal.NativeUtils;
+import io.github.givimad.whisperjni.internal.LibraryUtils;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
-import java.util.logging.Logger;
 
 /**
- * The {@link WhisperJNI} class allows to use whisper.cpp thought JNI.
+ * The {@link WhisperJNI} class allows to use whisper.cpp thought the JNI.
  *
  * @author Miguel Álvarez Díez - Initial contribution
  */
@@ -245,57 +244,46 @@ public class WhisperJNI {
      * @throws IOException when unable to load the native library
      */
     public static void loadLibrary() throws IOException {
+        loadLibrary(null);
+    }
+
+    /**
+     * Register the native library, should be called at first.
+     * @throws IOException when unable to load the native library
+     */
+    public static void loadLibrary(LoadOptions options) throws IOException {
+        if(options == null) {
+            options = new LoadOptions();
+        }
         if (libraryLoaded) {
             return;
         }
-        String bundleLibraryPath = null;
-        String osName = System.getProperty("os.name").toLowerCase();
-        String osArch = System.getProperty("os.arch").toLowerCase();
-        if (osName.contains("win")) {
-            if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                bundleLibraryPath = "/win-amd64/libwhisperjni.dll";
-            }
-        } else if (osName.contains("nix") || osName.contains("nux")
-                || osName.contains("aix")) {
-            String cpuInfo;
-            try {
-                cpuInfo = Files.readString(Path.of("/proc/cpuinfo"));
-            } catch (IOException ignored) {
-                cpuInfo = "";
-            }
-            if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
-                    bundleLibraryPath = "/debian-amd64/libwhisperjni+mf16c+mfma+mavx+mavx2.so";
-                } else {
-                    bundleLibraryPath = "/debian-amd64/libwhisperjni.so";
-                }
-            } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                if(cpuInfo.contains("fphp")) {
-                    bundleLibraryPath = "/debian-arm64/libwhisperjni+fp16.so";
-                } else if(cpuInfo.contains("crc32")) {
-                    bundleLibraryPath = "/debian-arm64/libwhisperjni+crc.so";
-                } else {
-                    bundleLibraryPath = "/debian-arm64/libwhisperjni.so";
-                }
-            } else if(osArch.contains("armv7") || osArch.contains("arm")) {
-                if(cpuInfo.contains("crc32")) {
-                    bundleLibraryPath = "/debian-armv7l/libwhisperjni+crc.so";
-                } else {
-                    bundleLibraryPath = "/debian-armv7l/libwhisperjni.so";
-                }
-            }
-        } else if (osName.contains("mac") || osName.contains("darwin")) {
-            if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                bundleLibraryPath = "/macos-amd64/libwhisperjni.dylib";
-            } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                bundleLibraryPath ="/macos-arm64/libwhisperjni.dylib";
-            }
-        }
-        if (bundleLibraryPath == null) {
-            throw new java.io.IOException("WhisperJNI: Unsupported platform " + osName + " - " + osArch);
-        }
-        NativeUtils.loadLibraryFromJar(bundleLibraryPath);
+        LibraryUtils.loadLibrary(options);
         libraryLoaded = true;
+    }
+
+    /**
+     * The class {@link LoadOptions} allows to customize the load of the required shared libraries.
+     *
+     * @author Miguel Álvarez Díez - Initial contribution
+     */
+    public static class LoadOptions {
+        /**
+         * Optional logs consumer.
+         */
+        public Consumer<String> logger;
+        /**
+         * Path to whisper jni library (so/dll/dylib).
+         * Takes prevalence over the bundled binary.
+         */
+        public Path whisperJNILib;
+        /**
+         * Path to whisper library (so/dylib).
+         * Takes prevalence over the bundled binary.
+         * Only works on Linux and macOS.
+         * On windows the library search for the whisper.dll in the $env:PATH directories.
+         */
+        public Path whisperLib;
     }
 
     /**

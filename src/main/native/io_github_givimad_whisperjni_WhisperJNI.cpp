@@ -1,7 +1,7 @@
 #include <iostream>
 #include <jni.h>
 #include "io_github_givimad_whisperjni_WhisperJNI.h"
-#include "./whisper/whisper.cpp"
+#include "whisper.h"
 #include <map>
 
 std::map<int, whisper_context *> contextMap;
