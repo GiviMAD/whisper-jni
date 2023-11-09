@@ -76,13 +76,13 @@ struct whisper_full_params parseJParams(JNIEnv *env, jobject jParams)
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_init(JNIEnv *env, jobject thisObject, jstring modelPath)
 {
   const char *path = env->GetStringUTFChars(modelPath, NULL);
-  return insertModel(whisper_init_from_file(path));
+  return insertModel(whisper_init_from_file_with_params(path, whisper_context_default_params()));
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState(JNIEnv *env, jobject thisObject, jstring modelPath)
 {
   const char *path = env->GetStringUTFChars(modelPath, NULL);
-  return insertModel(whisper_init_from_file_no_state(path));
+  return insertModel(whisper_init_from_file_with_params_no_state(path, whisper_context_default_params()));
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState(JNIEnv *env, jobject thisObject, jint ctxRef)
