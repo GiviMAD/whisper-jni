@@ -50,16 +50,14 @@ public class LibraryUtils {
      * (restriction of {@link File#createTempFile(java.lang.String, java.lang.String)}).
      * @throws FileNotFoundException If the file could not be found inside the JAR.
      */
-    public static void copyFromSystem(Path path, String filename, Consumer<String> logger) throws IOException {
+    private static void copyFromSystem(Path path, String filename, WhisperJNI.LibraryLogger logger) throws IOException {
         if(libraryDir == null) {
             libraryDir = createTempDirectory(TEMP_FOLDER_PREFIX);
         }
         if (null == path) {
             throw new IllegalArgumentException("Missing path.");
         }
-        if(logger != null) {
-            logger.accept("Extracting "+ path + " into " + libraryDir.resolve(filename));
-        }
+        logger.log("Copping "+ path + " into " + libraryDir.resolve(filename));
         try (var is = Files.newInputStream(path)) {
             createLibraryFromInputStream(filename, is);
         }
@@ -78,20 +76,15 @@ public class LibraryUtils {
      * (restriction of {@link File#createTempFile(java.lang.String, java.lang.String)}).
      * @throws FileNotFoundException If the file could not be found inside the JAR.
      */
-    public static void extractLibraryFromJar(String path, String filename, Consumer<String> logger) throws IOException {
+    public static void extractLibraryFromJar(String path, String filename, WhisperJNI.LibraryLogger logger) throws IOException {
         if(libraryDir == null) {
             libraryDir = createTempDirectory(TEMP_FOLDER_PREFIX);
         }
         if (null == path || !path.startsWith("/")) {
             throw new IllegalArgumentException("The path has to be absolute (start with '/').");
         }
-        if(logger != null) {
-            logger.accept("Extracting "+ path + " into " + libraryDir.resolve(filename));
-        }
+        logger.log("Extracting "+ path + " into " + libraryDir.resolve(filename));
         createLibraryFromInputStream(filename, LibraryUtils.class.getResourceAsStream(path));
-    }
-    public static void load(String filename) {
-        System.load(libraryDir.resolve(filename).toAbsolutePath().toString());
     }
     private static Path createTempDirectory(String prefix) throws IOException {
         String tempDir = System.getProperty("java.io.tmpdir");
@@ -109,22 +102,34 @@ public class LibraryUtils {
         String wrapperLibName;
         String osName = System.getProperty("os.name").toLowerCase();
         String osArch = System.getProperty("os.arch").toLowerCase();
-        if (osName.contains("win")) {
+        if(options.whisperLib != null && options.whisperJNILib != null) {
+            options.logger.log("Skipping OS detection.");
+            wrapperLibName = options.whisperJNILib.getFileName().toString();
+            LibraryUtils.copyFromSystem(options.whisperJNILib, wrapperLibName, options.logger);
+            LibraryUtils.copyFromSystem(options.whisperLib, options.whisperLib.getFileName().toString(), options.logger);
+        } else if (osName.contains("win")) {
+            options.logger.log("OS detected: Windows.");
             wrapperLibName = "whisperjni.dll";
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
+                options.logger.log("Compatible amd64 architecture detected.");
                 if(options.whisperJNILib == null){
-                    options.logger.accept("Looking for whisper.dll in $env:PATH.");
+                    options.logger.log("Looking for whisper.dll in $env:PATH.");
                     if(isWhisperDLLInstalled()) {
+                        options.logger.log("File whisper.dll found, it will be used.");
                         LibraryUtils.extractLibraryFromJar("/win-amd64/whisperjni.dll", "whisperjni.dll", options.logger);
                     } else {
+                        options.logger.log("File whisper.dll not found, loading full version.");
                         LibraryUtils.extractLibraryFromJar("/win-amd64/whisperjni_full.dll", "whisperjni.dll", options.logger);
                     }
                 } else {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "whisperjni.dll", options.logger);
                 }
+            } else {
+                throw new IOException("Unknown OS architecture");
             }
         } else if (osName.contains("nix") || osName.contains("nux")
                 || osName.contains("aix")) {
+            options.logger.log("OS detected: Linux.");
             wrapperLibName = "libwhisperjni.so";
             String cpuInfo;
             try {
@@ -133,6 +138,7 @@ public class LibraryUtils {
                 cpuInfo = "";
             }
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
+                options.logger.log("Compatible amd64 architecture detected.");
                 if(options.whisperLib == null) {
                     if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
                         LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper+mf16c+mfma+mavx+mavx2.so", "libwhisper.so", options.logger);
@@ -148,6 +154,7 @@ public class LibraryUtils {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.so", options.logger);
                 }
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
+                options.logger.log("Compatible arm64 architecture detected.");
                 if(options.whisperLib == null){
                     if(cpuInfo.contains("fphp")) {
                         LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper+fp16.so", "libwhisper.so", options.logger);
@@ -163,6 +170,7 @@ public class LibraryUtils {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.so", options.logger);
                 }
             } else if(osArch.contains("armv7") || osArch.contains("arm")) {
+                options.logger.log("Compatible arm architecture detected.");
                 if(options.whisperLib == null){
                     if(cpuInfo.contains("crc32")) {
                         LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper+crc.so", "libwhisper.so", options.logger);
@@ -177,10 +185,14 @@ public class LibraryUtils {
                 } else {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.so", options.logger);
                 }
+            } else {
+                throw new IOException("Unknown OS architecture");
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
+            options.logger.log("OS detected: macOS.");
             wrapperLibName = "libwhisperjni.dylib";
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
+                options.logger.log("Compatible amd64 architecture detected.");
                 if(options.whisperLib == null){
                     LibraryUtils.extractLibraryFromJar( "/macos-amd64/libwhisper.dylib", "libwhisper.dylib", options.logger);
                 } else {
@@ -192,6 +204,7 @@ public class LibraryUtils {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.dylib", options.logger);
                 }
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
+                options.logger.log("Compatible arm64 architecture detected.");
                 if(options.whisperLib == null){
                     LibraryUtils.extractLibraryFromJar( "/macos-arm64/libwhisper.dylib", "libwhisper.dylib", options.logger);
                 } else {
@@ -202,11 +215,13 @@ public class LibraryUtils {
                 } else {
                     LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisperjni.dylib", options.logger);
                 }
+            } else {
+                throw new IOException("Unknown OS architecture");
             }
         } else {
             throw new IOException("Unknown OS");
         }
-        LibraryUtils.load(wrapperLibName);
+        System.load(libraryDir.resolve(wrapperLibName).toAbsolutePath().toString());
     }
     private static boolean isWhisperDLLInstalled() {
         return Arrays

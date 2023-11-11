@@ -308,11 +308,14 @@ public class WhisperJNI {
      * @throws IOException when unable to load the native library.
      */
     public static void loadLibrary(LoadOptions options) throws IOException {
+        if (libraryLoaded) {
+            return;
+        }
         if (options == null) {
             options = new LoadOptions();
         }
-        if (libraryLoaded) {
-            return;
+        if(options.logger == null) {
+            options.logger = (String ignored) -> { };
         }
         LibraryUtils.loadLibrary(options);
         libraryLoaded = true;
@@ -345,9 +348,9 @@ public class WhisperJNI {
      */
     public static class LoadOptions {
         /**
-         * Optional logs consumer.
+         * Logs the library registration process (platform detection and library extraction).
          */
-        public Consumer<String> logger;
+        public LibraryLogger logger;
         /**
          * Path to whisper jni library (so/dll/dylib).
          * Takes prevalence over the bundled binary.
