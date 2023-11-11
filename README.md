@@ -6,8 +6,8 @@ A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allow
 
 This library aims to support the following platforms:
 
-* Windows x86_64 (built with mingw)
-* Debian x86_64/arm64 (built with GLIBC 2.31)
+* Windows x86_64 (built with mingw, not required for execution)
+* Linux GLIBC x86_64/arm64 (built with debian focal, GLIBC version 2.31)
 * macOS x86_64/arm64 (built targeting v11.0)
 
 The native binaries for those platforms are included in the distributed jar.
@@ -23,13 +23,36 @@ The package is distributed through [Maven Central](https://central.sonatype.com/
 
 You can also find the package's jar attached to each [release](https://github.com/GiviMAD/whisper-jni/releases).
 
+### Use external whisper shared library.
+
+It's possible to use your own build of the whisper.cpp shared library with this project.
+
+On `Linux/macOs` you need to provide the library path to the `loadLibrary` method.
+
+```java
+        ...
+        // load platform binaries
+        var loadOptions = new WhisperJNI.LoadOptions();
+        // Log library load to stdout
+        loadOptions.logger = System.out::println;
+        // Provide path to libwhisper so/dylib file.
+        loadOptions.whisperLib = Paths.get("/usr/local/lib/libwhisper.so");
+        // register the library
+        WhisperJNI.loadLibrary(loadOptions);
+        ...
+```
+
+On `windows` it's automatically used if `whisper.dll` exists in some of the directories in the $env:PATH variable.
+
 ## Example
 
 A basic example extracted from the tests.
 
 ```java
+        ...
+        WhisperJNI.loadLibrary(); // load platform binaries
+        WhisperJNI.setLibraryLogger(null); // capture/disable whisper.cpp log
         var whisper = new WhisperJNI();
-        whisper.loadLibrary();
         float[] samples = readJFKFileSamples();
         var ctx = whisper.init(Path.of(System.getProperty("user.home"), 'ggml-tiny.bin'));
         var params = new WhisperFullParams();
@@ -42,6 +65,7 @@ A basic example extracted from the tests.
         String text = whisper.fullGetSegmentText(ctx,0);
         assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
         ctx.close();
+        ...
 ```
 
 ## Building and testing the project.
@@ -66,7 +90,7 @@ mvn test
 
 ## Extending the native api
 
-If you want add any missing whisper.cpp functionality you need to:
+If you want to add any missing whisper.cpp functionality you need to:
 
 * Add the native method description in src/main/java/io/github/givimad/whisperjni/WhisperJNI.java.
 * Run the gen_header.sh script to regenerate the src/main/native/io_github_givimad_whisperjni_WhisperJNI.h header file. 
