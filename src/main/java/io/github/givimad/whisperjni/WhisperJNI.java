@@ -3,7 +3,6 @@ package io.github.givimad.whisperjni;
 import io.github.givimad.whisperjni.internal.LibraryUtils;
 
 import java.io.IOException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
@@ -14,25 +13,44 @@ import java.util.function.Consumer;
  */
 public class WhisperJNI {
     private static boolean libraryLoaded;
+    private static LibraryLogger libraryLogger;
 
-//region native api
-
+    //region native api
     private native int init(String model);
+
     private native int initNoState(String model);
+
     private native int initState(int model);
+
     private native boolean isMultilingual(int model);
+
     private native int full(int context, WhisperFullParams params, float[] samples, int numSamples);
+
     private native int fullWithState(int context, int state, WhisperFullParams params, float[] samples, int numSamples);
+
     private native int fullNSegments(int context);
+
     private native int fullNSegmentsFromState(int state);
+
     private native long fullGetSegmentTimestamp0(int context, int index);
+
     private native long fullGetSegmentTimestamp1(int context, int index);
+
     private native String fullGetSegmentText(int context, int index);
+
     private native long fullGetSegmentTimestamp0FromState(int state, int index);
+
     private native long fullGetSegmentTimestamp1FromState(int state, int index);
+
     private native String fullGetSegmentTextFromState(int state, int index);
+
     private native void freeContext(int context);
+
     private native void freeState(int state);
+
+    private native String printSystemInfo();
+
+    private native static void setLogger(boolean enabled);
 
 //endregion
 
@@ -40,7 +58,6 @@ public class WhisperJNI {
      * Creates a new whisper context.
      *
      * @param model {@link Path} to the whisper ggml model file.
-     *
      * @return A new {@link WhisperContext}.
      * @throws IOException if model file is missing.
      */
@@ -54,7 +71,6 @@ public class WhisperJNI {
      * Creates a new whisper context without state.
      *
      * @param model {@link Path} to the whisper ggml model file.
-     *
      * @return A new {@link WhisperContext} without state.
      * @throws IOException if model file is missing.
      */
@@ -68,7 +84,6 @@ public class WhisperJNI {
      * Creates a new whisper.cpp state for the provided context.
      *
      * @param context the {@link WhisperContext} of this state.
-     *
      * @return A new {@link WhisperContext}.
      */
     public WhisperState initState(WhisperContext context) {
@@ -80,7 +95,6 @@ public class WhisperJNI {
      * Is multilingual.
      *
      * @param context the {@link WhisperContext} to check.
-     *
      * @return true if model support multiple languages
      */
     public boolean isMultilingual(WhisperContext context) {
@@ -91,9 +105,9 @@ public class WhisperJNI {
     /**
      * Run whisper.cpp full audio transcription.
      *
-     * @param context the {@link WhisperContext} used to transcribe.
-     * @param params a {@link WhisperFullParams} instance with the desired configuration.
-     * @param samples the audio samples (f32 encoded samples with sample rate 16000).
+     * @param context    the {@link WhisperContext} used to transcribe.
+     * @param params     a {@link WhisperFullParams} instance with the desired configuration.
+     * @param samples    the audio samples (f32 encoded samples with sample rate 16000).
      * @param numSamples the number of audio samples provided.
      * @return a result code, values other than 0 indicates problems.
      */
@@ -105,10 +119,10 @@ public class WhisperJNI {
     /**
      * Run whisper.cpp full audio transcription.
      *
-     * @param context the {@link WhisperContext} used to transcribe.
-     * @param state the {@link WhisperState} used to transcribe.
-     * @param params a {@link WhisperFullParams} instance with the desired configuration.
-     * @param samples the audio samples (f32 encoded samples with sample rate 16000).
+     * @param context    the {@link WhisperContext} used to transcribe.
+     * @param state      the {@link WhisperState} used to transcribe.
+     * @param params     a {@link WhisperFullParams} instance with the desired configuration.
+     * @param samples    the audio samples (f32 encoded samples with sample rate 16000).
      * @param numSamples the number of audio samples provided.
      * @return a result code, values other than 0 indicates problems.
      */
@@ -122,7 +136,6 @@ public class WhisperJNI {
      * Gets the available number of text segments.
      *
      * @param state the {@link WhisperState} used to transcribe
-     *
      * @return available number of segments
      */
     public int fullNSegmentsFromState(WhisperState state) {
@@ -136,7 +149,7 @@ public class WhisperJNI {
      * @param context the {@link WhisperContext} used to transcribe
      * @return available number of segments
      */
-    public int fullNSegments(WhisperContext context){
+    public int fullNSegments(WhisperContext context) {
         WhisperJNIPointer.assertAvailable(context);
         return fullNSegments(context.ref);
     }
@@ -145,7 +158,7 @@ public class WhisperJNI {
      * Gets start timestamp of text segment by index.
      *
      * @param context a {@link WhisperContext} used to transcribe
-     * @param index the segment index
+     * @param index   the segment index
      * @return start timestamp of segment text, 800 -> 8s
      */
     public long fullGetSegmentTimestamp0(WhisperContext context, int index) {
@@ -157,7 +170,7 @@ public class WhisperJNI {
      * Gets end timestamp of text segment by index.
      *
      * @param context a {@link WhisperContext} used to transcribe
-     * @param index the segment index
+     * @param index   the segment index
      * @return end timestamp of segment text, 1050 -> 10.5s
      */
     public long fullGetSegmentTimestamp1(WhisperContext context, int index) {
@@ -169,7 +182,7 @@ public class WhisperJNI {
      * Gets text segment by index.
      *
      * @param context a {@link WhisperContext} used to transcribe
-     * @param index the segment index
+     * @param index   the segment index
      * @return the segment text
      */
     public String fullGetSegmentText(WhisperContext context, int index) {
@@ -240,7 +253,17 @@ public class WhisperJNI {
     }
 
     /**
+     * Get whisper.cpp system info stream, to check enabled features in whisper.
+     *
+     * @return the whisper.cpp system info stream.
+     */
+    public String getSystemInfo() {
+        return printSystemInfo();
+    }
+
+    /**
      * Register the native library, should be called at first.
+     *
      * @throws IOException when unable to load the native library
      */
     public static void loadLibrary() throws IOException {
@@ -249,10 +272,12 @@ public class WhisperJNI {
 
     /**
      * Register the native library, should be called at first.
-     * @throws IOException when unable to load the native library
+     *
+     * @param options instance of {@link LoadOptions} to customize library load.
+     * @throws IOException when unable to load the native library.
      */
     public static void loadLibrary(LoadOptions options) throws IOException {
-        if(options == null) {
+        if (options == null) {
             options = new LoadOptions();
         }
         if (libraryLoaded) {
@@ -260,6 +285,26 @@ public class WhisperJNI {
         }
         LibraryUtils.loadLibrary(options);
         libraryLoaded = true;
+    }
+
+    /**
+     * Proxy whisper.cpp logger.
+     * Should be called after {@link #loadLibrary()}.
+     *
+     * @param logger whisper.cpp log consumer, or null to disable the library default log to stderr.
+     */
+    public static void setLibraryLogger(LibraryLogger logger) {
+        libraryLogger = logger;
+        setLogger(libraryLogger != null);
+    }
+
+    /**
+     * The class {@link WhisperJNI.LibraryLogger} allows to proxy the whisper.cpp logger.
+     *
+     * @author Miguel Álvarez Díez - Initial contribution
+     */
+    public interface LibraryLogger {
+        void log(String text);
     }
 
     /**
@@ -284,6 +329,17 @@ public class WhisperJNI {
          * On windows the library search for the whisper.dll in the $env:PATH directories.
          */
         public Path whisperLib;
+    }
+
+    /**
+     * Called from the cpp side of the library to proxy the whisper.cpp logs.
+     *
+     * @param text whisper.cpp log line.
+     */
+    protected static void log(String text) {
+        if (libraryLogger != null) {
+            libraryLogger.log(text);
+        }
     }
 
     /**
@@ -312,6 +368,7 @@ public class WhisperJNI {
 
         /**
          * Creates a new object used to represent a struct pointer on the native library.
+         *
          * @param ref a random integer id generated by the native wrapper
          */
         protected WhisperJNIPointer(int ref) {
@@ -320,6 +377,7 @@ public class WhisperJNI {
 
         /**
          * Return true if native memory is free
+         *
          * @return a boolean indicating if the native data was already released
          */
         protected boolean isReleased() {

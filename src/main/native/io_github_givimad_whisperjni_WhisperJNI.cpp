@@ -7,6 +7,15 @@
 std::map<int, whisper_context *> contextMap;
 std::map<int, whisper_state *> stateMap;
 
+static JNIEnv *envRef;
+static jclass whisperJniJClass;
+static jmethodID logMethodId;
+static void whisper_log_proxy(const char * text) {
+    if(whisperJniJClass) {
+        jstring jstr = envRef->NewStringUTF(text);
+        envRef->CallStaticVoidMethod(whisperJniJClass, logMethodId, jstr);
+    }
+}
 int insertModel(whisper_context *ctx)
 {
   int ref = rand();
@@ -160,8 +169,6 @@ JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSe
   return env->NewStringUTF(text);
 }
 
-
-
 JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp0FromState(JNIEnv *env, jobject thisObject, jint stateRef, jint index)
 {
   whisper_state *state = stateMap.at(stateRef);
@@ -174,8 +181,6 @@ JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegm
   }
   return whisper_full_get_segment_t0_from_state(state, index);
 }
-
-
 
 JNIEXPORT jlong JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSegmentTimestamp1FromState(JNIEnv *env, jobject thisObject, jint stateRef, jint index)
 {
@@ -203,7 +208,11 @@ JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSe
   const char *text = whisper_full_get_segment_text_from_state(state, index);
   return env->NewStringUTF(text);
 }
-
+JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_printSystemInfo(JNIEnv *env, jobject thisObject)
+{
+  const char *text = whisper_print_system_info();
+  return env->NewStringUTF(text);
+}
 JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeContext(JNIEnv *env, jobject thisObject, jint ctxRef)
 {
   whisper_free(contextMap.at(ctxRef));
@@ -214,4 +223,17 @@ JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState(JN
 {
   whisper_free_state(stateMap.at(stateRef));
   stateMap.erase(stateRef);
+}
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_setLogger(JNIEnv *env, jclass thisClass, jboolean enabled) {
+    if (enabled) {
+        envRef = env;
+        whisperJniJClass = thisClass;
+        logMethodId = env->GetStaticMethodID(thisClass, "log", "(Ljava/lang/String;)V");
+        whisper_set_log_callback(whisper_log_proxy);
+    } else {
+        whisperJniJClass = NULL;
+        envRef = NULL;
+        logMethodId = NULL;
+        whisper_set_log_callback(NULL);
+    }
 }
