@@ -10,18 +10,18 @@ extern "C" {
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    init
- * Signature: (Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;Lio/github/givimad/whisperjni/WhisperContextParams;)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_init
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jobject);
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    initNoState
- * Signature: (Ljava/lang/String;)I
+ * Signature: (Ljava/lang/String;Lio/github/givimad/whisperjni/WhisperContextParams;)I
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState
-  (JNIEnv *, jobject, jstring);
+  (JNIEnv *, jobject, jstring, jobject);
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
@@ -30,6 +30,14 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState
  */
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState
   (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    initOpenVINOEncoder
+ * Signature: (ILjava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initOpenVINOEncoder
+  (JNIEnv *, jobject, jint, jstring);
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
