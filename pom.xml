@@ -8,7 +8,7 @@
     <artifactId>whisper-jni</artifactId>
     <name>whisper-jni</name>
     <url>https://github.com/GiviMAD/whisper-jni</url>
-    <version>1.4.3</version>
+    <version>1.4.3-0</version>
     <description>A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allows to transcribe speech to text in Java</description>
     
     <licenses>
@@ -39,9 +39,15 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.13.2</version>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter-api</artifactId>
+            <version>5.10.1</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.junit.jupiter</groupId>
+            <artifactId>junit-jupiter</artifactId>
+            <version>5.10.1</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

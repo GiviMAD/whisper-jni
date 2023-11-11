@@ -1,6 +1,4 @@
 package io.github.givimad.whisperjni;
-import org.junit.Before;
-import org.junit.Test;
 
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
@@ -11,18 +9,21 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.file.Path;
 
-import static junit.framework.TestCase.assertEquals;
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertThrows;
-import static org.junit.Assert.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 
 public class WhisperJNITest {
-    Path testModelPath = Path.of("ggml-tiny.bin");
-    Path samplePath = Path.of("src/main/native/whisper/samples/jfk.wav");
-    WhisperJNI whisper;
+    private static Path testModelPath = Path.of("ggml-tiny.bin");
+    private static Path samplePath = Path.of("src/main/native/whisper/samples/jfk.wav");
+    private static WhisperJNI whisper;
 
-    @Before
-    public void before() throws IOException {
+    @BeforeAll
+    public static void beforeAll() throws IOException {
         var modelFile = testModelPath.toFile();
         var sampleFile = samplePath.toFile();
         if(!modelFile.exists() || !modelFile.isFile()) {
@@ -34,6 +35,7 @@ public class WhisperJNITest {
         var loadOptions = new WhisperJNI.LoadOptions();
         loadOptions.logger = System.out::println;
         WhisperJNI.loadLibrary(loadOptions);
+        WhisperJNI.setLibraryLogger(null);
         whisper = new WhisperJNI();
     }
 
@@ -161,6 +163,13 @@ public class WhisperJNITest {
                 assertEquals(" And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.", text);
             }
         }
+    }
+
+    @Test
+    public void printSystemInfo() throws Exception {
+        String whisperCPPSystemInfo = whisper.getSystemInfo();
+        assertFalse(whisperCPPSystemInfo.isBlank());
+        System.out.println("whisper.cpp library info: " + whisperCPPSystemInfo);
     }
 
     private float[] readJFKFileSamples() throws UnsupportedAudioFileException, IOException {
