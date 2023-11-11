@@ -22,13 +22,21 @@ int insertModel(whisper_context *ctx)
   contextMap.insert({ref, ctx});
   return ref;
 }
-struct whisper_full_params parseJParams(JNIEnv *env, jobject jParams)
+
+struct whisper_context_params newWhisperContextParams(JNIEnv *env, jobject jParams)
+{
+  jclass paramsJClass = env->GetObjectClass(jParams);
+  struct whisper_context_params params = whisper_context_default_params();
+  params.use_gpu = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "useGPU", "Z"));
+  return params;
+}
+struct whisper_full_params newWhisperFullParams(JNIEnv *env, jobject jParams)
 {
   jclass paramsJClass = env->GetObjectClass(jParams);
 
-  struct whisper_full_params params = whisper_full_default_params(
-      (whisper_sampling_strategy)env->GetIntField(jParams, env->GetFieldID(paramsJClass, "strategy", "I")));
-  // int params
+  whisper_sampling_strategy samplingStrategy = (whisper_sampling_strategy)env->GetIntField(jParams, env->GetFieldID(paramsJClass, "strategy", "I"));
+  struct whisper_full_params params = whisper_full_default_params(samplingStrategy);
+
   int nThreads = (jint)env->GetIntField(jParams, env->GetFieldID(paramsJClass, "nThreads", "I"));
   if (nThreads > 0)
   {
@@ -82,16 +90,16 @@ struct whisper_full_params parseJParams(JNIEnv *env, jobject jParams)
   return params;
 }
 
-JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_init(JNIEnv *env, jobject thisObject, jstring modelPath)
+JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_init(JNIEnv *env, jobject thisObject, jstring modelPath, jobject jParams)
 {
   const char *path = env->GetStringUTFChars(modelPath, NULL);
-  return insertModel(whisper_init_from_file_with_params(path, whisper_context_default_params()));
+  return insertModel(whisper_init_from_file_with_params(path, newWhisperContextParams(env, jParams)));
 }
 
-JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState(JNIEnv *env, jobject thisObject, jstring modelPath)
+JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initNoState(JNIEnv *env, jobject thisObject, jstring modelPath, jobject jParams)
 {
   const char *path = env->GetStringUTFChars(modelPath, NULL);
-  return insertModel(whisper_init_from_file_with_params_no_state(path, whisper_context_default_params()));
+  return insertModel(whisper_init_from_file_with_params_no_state(path, newWhisperContextParams(env, jParams)));
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState(JNIEnv *env, jobject thisObject, jint ctxRef)
@@ -102,6 +110,11 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState(JN
   return stateRef;
 }
 
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initOpenVINOEncoder(JNIEnv *env, jobject thisObject, jint ctxRef, jstring deviceString) {
+  const char *device = env->GetStringUTFChars(deviceString, NULL);
+  whisper_ctx_init_openvino_encoder(contextMap.at(ctxRef), nullptr, device, nullptr);
+}
+
 JNIEXPORT jboolean JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_isMultilingual(JNIEnv *env, jobject thisObject, jint ctxRef)
 {
   return whisper_is_multilingual(contextMap.at(ctxRef));
@@ -110,13 +123,13 @@ JNIEXPORT jboolean JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_isMultil
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_full(JNIEnv *env, jobject thisObject, jint ctxRef, jobject jParams, jfloatArray samples, jint numSamples)
 {
   const float *samplesPointer = env->GetFloatArrayElements(samples, NULL);
-  return whisper_full(contextMap.at(ctxRef), parseJParams(env, jParams), samplesPointer, numSamples);
+  return whisper_full(contextMap.at(ctxRef), newWhisperFullParams(env, jParams), samplesPointer, numSamples);
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullWithState(JNIEnv *env, jobject thisObject, jint ctxRef, jint stateRef, jobject jParams, jfloatArray samples, jint numSamples)
 {
   const float *samplesPointer = env->GetFloatArrayElements(samples, NULL);
-  return whisper_full_with_state(contextMap.at(ctxRef), stateMap.at(stateRef), parseJParams(env, jParams), samplesPointer, numSamples);
+  return whisper_full_with_state(contextMap.at(ctxRef), stateMap.at(stateRef), newWhisperFullParams(env, jParams), samplesPointer, numSamples);
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegments(JNIEnv *env, jobject thisObject, jint ctxRef)

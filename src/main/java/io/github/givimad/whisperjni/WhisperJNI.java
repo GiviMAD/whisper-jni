@@ -3,6 +3,7 @@ package io.github.givimad.whisperjni;
 import io.github.givimad.whisperjni.internal.LibraryUtils;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.function.Consumer;
 
@@ -16,11 +17,13 @@ public class WhisperJNI {
     private static LibraryLogger libraryLogger;
 
     //region native api
-    private native int init(String model);
+    private native int init(String model, WhisperContextParams params);
 
-    private native int initNoState(String model);
+    private native int initNoState(String model, WhisperContextParams params);
 
     private native int initState(int model);
+
+    private native void initOpenVINOEncoder(int model, String device);
 
     private native boolean isMultilingual(int model);
 
@@ -62,9 +65,23 @@ public class WhisperJNI {
      * @throws IOException if model file is missing.
      */
     public WhisperContext init(Path model) throws IOException {
-        var absModelPath = model.toAbsolutePath();
-        assertModelExists(model, absModelPath);
-        return new WhisperContext(this, init(absModelPath.toString()));
+        return init(model, null);
+    }
+
+    /**
+     * Creates a new whisper context.
+     *
+     * @param model  {@link Path} to the whisper ggml model file.
+     * @param params {@link WhisperContextParams} params for context initialization.
+     * @return A new {@link WhisperContext}.
+     * @throws IOException if model file is missing.
+     */
+    public WhisperContext init(Path model, WhisperContextParams params) throws IOException {
+        assertModelExists(model);
+        if(params == null) {
+            params = new WhisperContextParams();
+        }
+        return new WhisperContext(this, init(model.toAbsolutePath().toString(), params));
     }
 
     /**
@@ -75,9 +92,23 @@ public class WhisperJNI {
      * @throws IOException if model file is missing.
      */
     public WhisperContext initNoState(Path model) throws IOException {
-        var absModelPath = model.toAbsolutePath();
-        assertModelExists(model, absModelPath);
-        return new WhisperContext(this, initNoState(absModelPath.toString()));
+        return initNoState(model, null);
+    }
+
+    /**
+     * Creates a new whisper context without state.
+     *
+     * @param model  {@link Path} to the whisper ggml model file.
+     * @param params {@link WhisperContextParams} params for context initialization.
+     * @return A new {@link WhisperContext} without state.
+     * @throws IOException if model file is missing.
+     */
+    public WhisperContext initNoState(Path model, WhisperContextParams params) throws IOException {
+        assertModelExists(model);
+        if(params == null) {
+            params = new WhisperContextParams();
+        }
+        return new WhisperContext(this, initNoState(model.toAbsolutePath().toString(), params));
     }
 
     /**
@@ -392,9 +423,9 @@ public class WhisperJNI {
         }
     }
 
-    private static void assertModelExists(Path model, Path path) throws IOException {
-        if (!model.toFile().exists() || !model.toFile().isFile()) {
-            throw new IOException("Missing model file: " + path);
+    private static void assertModelExists(Path model) throws IOException {
+        if (!Files.exists(model) || Files.isDirectory(model)) {
+            throw new IOException("Missing model file: " + model);
         }
     }
 }
