@@ -2,7 +2,7 @@ set -xe
 
 LIB_SRC=src/main/java/io/github/givimad/whisperjni
 javac -h src/main/native \
-$LIB_SRC/internal/NativeUtils.java \
+$LIB_SRC/internal/LibraryUtils.java \
 $LIB_SRC/WhisperContext.java \
 $LIB_SRC/WhisperSamplingStrategy.java \
 $LIB_SRC/WhisperFullParams.java \
