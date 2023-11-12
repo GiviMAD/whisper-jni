@@ -5,7 +5,6 @@ import io.github.givimad.whisperjni.internal.LibraryUtils;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.function.Consumer;
 
 /**
  * The {@link WhisperJNI} class allows to use whisper.cpp thought the JNI.
@@ -120,6 +119,17 @@ public class WhisperJNI {
     public WhisperState initState(WhisperContext context) {
         WhisperJNIPointer.assertAvailable(context);
         return new WhisperState(this, initState(context.ref), context);
+    }
+
+    /**
+     * Initializes OpenVino encoder.
+     *
+     * @param context a {@link WhisperContext} instance.
+     * @param device the device name.
+     */
+    public void initOpenVINO(WhisperContext context, String device) {
+        WhisperJNIPointer.assertAvailable(context);
+        initOpenVINOEncoder(context.ref, device);
     }
 
     /**
