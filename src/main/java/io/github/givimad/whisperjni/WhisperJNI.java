@@ -80,7 +80,11 @@ public class WhisperJNI {
         if(params == null) {
             params = new WhisperContextParams();
         }
-        return new WhisperContext(this, init(model.toAbsolutePath().toString(), params));
+        int ref = init(model.toAbsolutePath().toString(), params);
+        if(ref == -1) {
+            return null;
+        }
+        return new WhisperContext(this, ref);
     }
 
     /**
@@ -107,7 +111,11 @@ public class WhisperJNI {
         if(params == null) {
             params = new WhisperContextParams();
         }
-        return new WhisperContext(this, initNoState(model.toAbsolutePath().toString(), params));
+        int ref = initNoState(model.toAbsolutePath().toString(), params);
+        if(ref == -1) {
+            return null;
+        }
+        return new WhisperContext(this, ref);
     }
 
     /**
@@ -118,7 +126,11 @@ public class WhisperJNI {
      */
     public WhisperState initState(WhisperContext context) {
         WhisperJNIPointer.assertAvailable(context);
-        return new WhisperState(this, initState(context.ref), context);
+        int ref = initState(context.ref);
+        if(ref == -1) {
+            return null;
+        }
+        return new WhisperState(this, ref, context);
     }
 
     /**

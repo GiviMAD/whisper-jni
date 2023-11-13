@@ -172,6 +172,14 @@ public class WhisperJNITest {
         System.out.println("whisper.cpp library info: " + whisperCPPSystemInfo);
     }
 
+    @Test
+    public void initOpenVINO() throws Exception {
+        try(var ctx = whisper.initNoState(testModelPath)) {
+            assertNotNull(ctx);
+            whisper.initOpenVINO(ctx, "CPU");
+        }
+    }
+
     private float[] readJFKFileSamples() throws UnsupportedAudioFileException, IOException {
         // sample is a 16 bit int 16000hz little endian wav file
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(samplePath.toFile());
