@@ -2,7 +2,7 @@
 
 A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allows transcribe speech to text in Java.
 
-## Platform support 
+## Platform support
 
 This library aims to support the following platforms:
 
@@ -44,9 +44,7 @@ On `Linux/macOs` you need to provide the library path to the `loadLibrary` metho
 
 On `windows` it's automatically used if `whisper.dll` exists in some of the directories in the $env:PATH variable.
 
-## Example
-
-A basic example extracted from the tests.
+## Basic Example
 
 ```java
         ...
@@ -64,10 +62,27 @@ A basic example extracted from the tests.
         assertEquals(1, numSegments);
         String text = whisper.fullGetSegmentText(ctx,0);
         assertEquals(" And so my fellow Americans ask not what your country can do for you ask what you can do for your country.", text);
-        ctx.close();
+        ctx.close(); // free native memory, should be called when we don't need the context anymore.
         ...
 ```
 
+## Grammar usage
+
+This wonderful functionality added in whisper.cpp v1.5.0 was integrated into the wrapper.
+It makes use of the grammar parser implementation provided among the whisper.cpp examples,
+so you can use the [gbnf grammar](https://github.com/ggerganov/whisper.cpp/blob/master/grammars/) to improve the transcriptions results.
+```java
+        ...
+        try (WhisperGrammar grammar = whisper.parseGrammar(Paths.of("/my_grammar.gbnf"))) {
+            var params = new WhisperFullParams();
+            params.grammar = grammar;
+            params.grammarPenalty = 100f;
+            ...
+            int result = whisper.full(ctx, params, samples, samples.length);
+            ...
+        }
+        ...
+```
 ## Building and testing the project.
 
 You need Java and Cpp setup.
@@ -82,7 +97,7 @@ Then you need to download the model used in the tests using the script 'download
 
 Run the appropriate build script for your platform (build_debian.sh, build_macos.sh or build_win.ps1), it will place the native library file on the resources directory.
 
-Finally you can run the project tests to confirm it works:
+Finally, you can run the project tests to confirm it works:
 
 ```sh
 mvn test

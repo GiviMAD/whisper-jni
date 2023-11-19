@@ -3,12 +3,14 @@
 #include <jni.h>
 #include "io_github_givimad_whisperjni_WhisperJNI.h"
 #include "whisper.h"
+#include "grammar-parser.h"
 
 std::map<int, whisper_context *> contextMap;
 std::map<int, whisper_state *> stateMap;
+std::map<int, grammar_parser::parse_state *> grammarMap;
 
 static JavaVM *jvmRef = nullptr;
-static void whisper_log_proxy(const char * text) {
+static void whisper_log_proxy(enum ggml_log_level level, const char * text, void * user_data) {
     if(jvmRef) {
         JNIEnv *env;
         if (jvmRef->AttachCurrentThread((void**)&env, NULL) != JNI_OK) {
@@ -40,6 +42,16 @@ int getStateId() {
         }
     }
     throw std::runtime_error("Wrapper error: Unable to get state id");
+}
+int getGrammarId() {
+    int i = 0;
+    while (i++ < 1000) {
+        int id = rand();
+        if(!grammarMap.count(id)) {
+            return id;
+        }
+    }
+    throw std::runtime_error("Wrapper error: Unable to get grammar id");
 }
 int insertModel(whisper_context *ctx)
 {
@@ -92,6 +104,7 @@ struct whisper_full_params newWhisperFullParams(JNIEnv *env, jobject jParams)
   params.initial_prompt = initialPrompt == NULL ? nullptr : env->GetStringUTFChars(initialPrompt, NULL);
 
   params.translate = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "translate", "Z"));
+  params.no_timestamps = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "noTimestamps", "Z"));
   params.no_context = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "noContext", "Z"));
   params.single_segment = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "singleSegment", "Z"));
   params.print_special = (jboolean)env->GetBooleanField(jParams, env->GetFieldID(paramsJClass, "printSpecial", "Z"));
@@ -125,7 +138,6 @@ struct whisper_full_params newWhisperFullParams(JNIEnv *env, jobject jParams)
   }
   break;
   }
-
   return params;
 }
 
@@ -175,22 +187,57 @@ JNIEXPORT jboolean JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_isMultil
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_full(JNIEnv *env, jobject thisObject, jint ctxRef, jobject jParams, jfloatArray samples, jint numSamples)
 {
-  whisper_full_params params = newWhisperFullParams(env, jParams);
-  jfloat *samplesPointer = env->GetFloatArrayElements(samples, NULL);
-  int result = whisper_full(contextMap.at(ctxRef), params, samplesPointer, numSamples);
-  freeWhisperFullParams(env, jParams, params);
-  env->ReleaseFloatArrayElements(samples, samplesPointer, 0);
-  return result;
+    whisper_full_params params = newWhisperFullParams(env, jParams);
+    // I was unable to handle the grammar inside the newWhisperFullParams fn
+    jclass paramsJClass = env->GetObjectClass(jParams);
+    jobject jGrammar = env->GetObjectField(jParams, env->GetFieldID(paramsJClass, "grammar", "Lio/github/givimad/whisperjni/WhisperGrammar;"));
+    float grammarPenalty = env->GetFloatField(jParams, env->GetFieldID(paramsJClass, "grammarPenalty", "F"));
+    std::vector<const whisper_grammar_element *> grammar_rules; // I don't know why, this one needs to be declared outside the 'if' statement.
+    if(jGrammar) {
+        jclass grammarJClass = env->GetObjectClass(jGrammar);
+        int grammarRef = env->GetIntField(jGrammar, env->GetFieldID(grammarJClass, "ref", "I"));
+        grammar_parser::parse_state* grammar_parsed = grammarMap.at(grammarRef);
+        grammar_rules = grammar_parsed->c_rules();
+        if (!grammar_parsed->rules.empty() && grammar_parsed->symbol_ids.find("root") != grammar_parsed->symbol_ids.end()) {
+            params.grammar_rules   = grammar_rules.data();
+            params.n_grammar_rules = grammar_rules.size();
+            params.i_start_rule    = grammar_parsed->symbol_ids.at("root");
+            params.grammar_penalty = grammarPenalty;
+        }
+    }
+
+    jfloat *samplesPointer = env->GetFloatArrayElements(samples, NULL);
+    int result = whisper_full(contextMap.at(ctxRef), params, samplesPointer, numSamples);
+    freeWhisperFullParams(env, jParams, params);
+    env->ReleaseFloatArrayElements(samples, samplesPointer, 0);
+    return result;
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullWithState(JNIEnv *env, jobject thisObject, jint ctxRef, jint stateRef, jobject jParams, jfloatArray samples, jint numSamples)
 {
-  whisper_full_params params = newWhisperFullParams(env, jParams);
-  jfloat *samplesPointer = env->GetFloatArrayElements(samples, NULL);
-  int result = whisper_full_with_state(contextMap.at(ctxRef), stateMap.at(stateRef), params, samplesPointer, numSamples);
-  freeWhisperFullParams(env, jParams, params);
-  env->ReleaseFloatArrayElements(samples, samplesPointer, 0);
-  return result;
+    whisper_full_params params = newWhisperFullParams(env, jParams);
+    // I was unable to handle the grammar inside the newWhisperFullParams fn
+    jclass paramsJClass = env->GetObjectClass(jParams);
+    jobject jGrammar = env->GetObjectField(jParams, env->GetFieldID(paramsJClass, "grammar", "Lio/github/givimad/whisperjni/WhisperGrammar;"));
+    float grammarPenalty = env->GetFloatField(jParams, env->GetFieldID(paramsJClass, "grammarPenalty", "F"));
+    std::vector<const whisper_grammar_element *> grammar_rules; // I don't know why, this one needs to be declared outside the 'if' statement.
+    if(jGrammar) {
+      jclass grammarJClass = env->GetObjectClass(jGrammar);
+      int grammarRef = env->GetIntField(jGrammar, env->GetFieldID(grammarJClass, "ref", "I"));
+      grammar_parser::parse_state* grammar_parsed = grammarMap.at(grammarRef);
+      grammar_rules = grammar_parsed->c_rules();
+      if (!grammar_parsed->rules.empty() && grammar_parsed->symbol_ids.find("root") != grammar_parsed->symbol_ids.end()) {
+          params.grammar_rules   = grammar_rules.data();
+          params.n_grammar_rules = grammar_rules.size();
+          params.i_start_rule    = grammar_parsed->symbol_ids.at("root");
+          params.grammar_penalty = grammarPenalty;
+      }
+    }
+    jfloat *samplesPointer = env->GetFloatArrayElements(samples, NULL);
+    int result = whisper_full_with_state(contextMap.at(ctxRef), stateMap.at(stateRef), params, samplesPointer, numSamples);
+    freeWhisperFullParams(env, jParams, params);
+    env->ReleaseFloatArrayElements(samples, samplesPointer, 0);
+    return result;
 }
 
 JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullNSegments(JNIEnv *env, jobject thisObject, jint ctxRef)
@@ -282,6 +329,24 @@ JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_fullGetSe
   const char *text = whisper_full_get_segment_text_from_state(state, index);
   return env->NewStringUTF(text);
 }
+
+JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_loadGrammar(JNIEnv *env, jobject thisObject, jstring grammarText) {
+    const char* grammarChars = env->GetStringUTFChars(grammarText, NULL);
+    grammar_parser::parse_state* grammarPointer = new grammar_parser::parse_state{};
+    try {
+        *grammarPointer = grammar_parser::parse(grammarChars);
+    } catch(const std::exception& e) {
+        env->ReleaseStringUTFChars(grammarText, grammarChars);
+        jclass exClass = env->FindClass("java/lang/IOException");
+        env->ThrowNew(exClass, e.what());
+        return -1;
+    }
+    env->ReleaseStringUTFChars(grammarText, grammarChars);
+    int grammarRef = getGrammarId();
+    grammarMap.insert({grammarRef, grammarPointer});
+    return grammarRef;
+}
+
 JNIEXPORT jstring JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_printSystemInfo(JNIEnv *env, jobject thisObject)
 {
   const char *text = whisper_print_system_info();
@@ -298,15 +363,21 @@ JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState(JN
   whisper_free_state(stateMap.at(stateRef));
   stateMap.erase(stateRef);
 }
-JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_setLogger(JNIEnv *env, jclass thisClass, jboolean enabled) {
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeGrammar(JNIEnv *env, jobject thisClass, jint grammarRef)
+{
+  free(grammarMap.at(grammarRef));
+  stateMap.erase(grammarRef);
+}
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_setLogger(JNIEnv *env, jclass thisClass, jboolean enabled)
+{
     if (enabled) {
         if (!jvmRef && env->GetJavaVM(&jvmRef) != JNI_OK) {
             jclass exClass = env->FindClass("java/lang/RuntimeException");
             env->ThrowNew(exClass, "Failed getting reference to Java VM");
             return;
         }
-        whisper_set_log_callback(whisper_log_proxy);
     } else {
-        whisper_set_log_callback(NULL);
+        jvmRef = nullptr;
     }
+    whisper_log_set(whisper_log_proxy, nullptr);
 }

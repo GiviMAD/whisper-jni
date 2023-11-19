@@ -92,7 +92,8 @@ public class WhisperJNITest {
     public void testFull() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.init(testModelPath)) {
-            var params = new WhisperFullParams();
+            assertNotNull(ctx);
+            var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
             int result = whisper.full(ctx, params, samples, samples.length);
             if(result != 0) {
                 throw new RuntimeException("Transcription failed with code " + result);
@@ -112,6 +113,7 @@ public class WhisperJNITest {
     public void testFullBeanSearch() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.init(testModelPath)) {
+            assertNotNull(ctx);
             var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
             params.printTimestamps = false;
             int result = whisper.full(ctx, params, samples, samples.length);
@@ -128,8 +130,10 @@ public class WhisperJNITest {
     public void testFullWithState() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.initNoState(testModelPath)) {
-            var params = new WhisperFullParams();
+            assertNotNull(ctx);
+            var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
             try (var state = whisper.initState(ctx)) {
+                assertNotNull(state);
                 int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
                 if(result != 0) {
                     throw new RuntimeException("Transcription failed with code " + result);
@@ -150,9 +154,11 @@ public class WhisperJNITest {
     public void testFullWithStateBeanSearch() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.initNoState(testModelPath)) {
+            assertNotNull(ctx);
             var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
             params.printTimestamps = false;
             try (var state = whisper.initState(ctx)) {
+                assertNotNull(state);
                 int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
                 if(result != 0) {
                     throw new RuntimeException("Transcription failed with code " + result);
@@ -161,6 +167,30 @@ public class WhisperJNITest {
                 assertEquals(1, numSegments);
                 String text = whisper.fullGetSegmentTextFromState(state,0);
                 assertEquals(" And so, my fellow Americans, ask not what your country can do for you, ask what you can do for your country.", text);
+            }
+        }
+    }
+
+    @Test
+    public void testFullWithGrammar() throws Exception {
+        // Init trailing space is important
+        String grammarText = "root ::= \" And so, my fellow American, ask not what your country can do for you, ask what you can do for your country.\"";
+        System.out.println("Test grammar: \n" + grammarText);
+        float[] samples = readJFKFileSamples();
+        try (WhisperGrammar grammar = whisper.parseGrammar(grammarText)) {
+            assertNotNull(grammar);
+            try (var ctx = whisper.init(testModelPath)) {
+                assertNotNull(ctx);
+                var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
+                params.grammar = grammar;
+                int result = whisper.full(ctx, params, samples, samples.length);
+                if (result != 0) {
+                    throw new RuntimeException("Transcription failed with code " + result);
+                }
+                int numSegments = whisper.fullNSegments(ctx);
+                assertEquals(1, numSegments);
+                String text = whisper.fullGetSegmentText(ctx, 0);
+                assertEquals(" And so, my fellow American, ask not what your country can do for you, ask what you can do for your country.", text);
             }
         }
     }

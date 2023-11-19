@@ -32,17 +32,21 @@ cc --target="$TARGET" -arch "$AARCH" $CFLAGS -c ./src/main/native/whisper/ggml-a
 cc --target="$TARGET" -arch "$AARCH" $CFLAGS -c ./src/main/native/whisper/ggml-backend.c -o ./src/main/native/ggml-backend.o
 cc --target="$TARGET" -arch "$AARCH" $CFLAGS -c ./src/main/native/whisper/ggml-quants.c -o ./src/main/native/ggml-quants.o
 # build whisper object
-g++ -c -arch "$AARCH" $INCLUDE_JAVA \
+g++ -c -arch "$AARCH" \
 -I src/main/native/whisper/ $CXXFLAGS --target="$TARGET" \
 src/main/native/whisper/whisper.cpp -o src/main/native/whisper.o
+# build whisper grammar parser object
+g++ -c -arch "$AARCH" \
+-I src/main/native/whisper/ $CXXFLAGS --target="$TARGET" \
+src/main/native/whisper/examples/grammar-parser.cpp -o src/main/native/grammar-parser.o
 # build whisper jni wrapper object
 g++ -c -arch "$AARCH" $INCLUDE_JAVA \
--I src/main/native/ -I src/main/native/whisper/ $CXXFLAGS --target="$TARGET" \
+-I src/main/native/ -I src/main/native/whisper/ -I src/main/native/whisper/examples/ $CXXFLAGS --target="$TARGET" \
 src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o
 # link whisper shared object
 g++ -arch "$AARCH" --target="$TARGET" -dynamiclib -I src/main/native/whisper/ -o libwhisper.dylib src/main/native/ggml.o src/main/native/ggml-alloc.o src/main/native/ggml-backend.o src/main/native/ggml-quants.o src/main/native/whisper.o -lc $LDFLAGS
 # link whisper jni wrapper shared object
-g++ -arch "$AARCH" --target="$TARGET" -dynamiclib -I src/main/native/ -I src/main/native/whisper/ -L. -lwhisper -o libwhisperjni.dylib src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -lc $LDFLAGS
+g++ -arch "$AARCH" --target="$TARGET" -dynamiclib -I src/main/native/ -I src/main/native/whisper/ -L. -lwhisper -o libwhisperjni.dylib src/main/native/grammar-parser.o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -lc $LDFLAGS
 # force search for libwhisper.dylib on same dir
 install_name_tool -change libwhisper.dylib @loader_path/libwhisper.dylib libwhisperjni.dylib
 # clean
