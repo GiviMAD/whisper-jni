@@ -11,12 +11,14 @@ build_lib() {
   cc $CFLAGS -c ./src/main/native/whisper/ggml-quants.c -o ./src/main/native/ggml-quants.o
   # build whisper object
   g++ -c -I src/main/native/whisper/ $CXXFLAGS src/main/native/whisper/whisper.cpp -o src/main/native/whisper.o
+  # build grammar-parser object
+  g++ -c -I src/main/native/whisper/ $CXXFLAGS src/main/native/whisper/examples/grammar-parser.cpp -o src/main/native/grammar-parser.o
   # build whisper jni wrapper object
-  g++ -c -I src/main/native -I src/main/native/whisper $INCLUDE_JAVA $CXXFLAGS src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o
+  g++ -c -I src/main/native -I src/main/native/whisper -I src/main/native/whisper/examples $INCLUDE_JAVA $CXXFLAGS src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp -o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o
   # link whisper shared object
   g++ -shared -I src/main/native/whisper/ src/main/native/ggml.o src/main/native/ggml-alloc.o src/main/native/ggml-backend.o src/main/native/ggml-quants.o src/main/native/whisper.o -o libwhisper.so
   # link whisper jni wrapper shared object
-  g++ -shared -I src/main/native/whisper/ -Wl,-rpath='${ORIGIN}' src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -L. -lwhisper -o libwhisperjni.so
+  g++ -shared -I src/main/native/whisper/ -Wl,-rpath='${ORIGIN}' src/main/native/grammar-parser.o src/main/native/io_github_givimad_whisperjni_WhisperJNI.o -L. -lwhisper -o libwhisperjni.so
   # clean
   mv libwhisper.so src/main/resources/debian-$AARCH/libwhisper$LIB_VARIANT.so
   mv libwhisperjni.so src/main/resources/debian-$AARCH/libwhisperjni.so

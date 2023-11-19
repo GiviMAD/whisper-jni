@@ -33,6 +33,14 @@ JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_initState
 
 /*
  * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    loadGrammar
+ * Signature: (Ljava/lang/String;)I
+ */
+JNIEXPORT jint JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_loadGrammar
+  (JNIEnv *, jobject, jstring);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
  * Method:    initOpenVINOEncoder
  * Signature: (ILjava/lang/String;)V
  */
@@ -141,6 +149,14 @@ JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeContext
  * Signature: (I)V
  */
 JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeState
+  (JNIEnv *, jobject, jint);
+
+/*
+ * Class:     io_github_givimad_whisperjni_WhisperJNI
+ * Method:    freeGrammar
+ * Signature: (I)V
+ */
+JNIEXPORT void JNICALL Java_io_github_givimad_whisperjni_WhisperJNI_freeGrammar
   (JNIEnv *, jobject, jint);
 
 /*

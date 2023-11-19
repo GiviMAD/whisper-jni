@@ -2,6 +2,7 @@ package io.github.givimad.whisperjni;
 
 import io.github.givimad.whisperjni.internal.LibraryUtils;
 
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,6 +22,8 @@ public class WhisperJNI {
     private native int initNoState(String model, WhisperContextParams params);
 
     private native int initState(int model);
+
+    private native int loadGrammar(String text);
 
     private native void initOpenVINOEncoder(int model, String device);
 
@@ -49,6 +52,8 @@ public class WhisperJNI {
     private native void freeContext(int context);
 
     private native void freeState(int state);
+
+    private native void freeGrammar(int grammar);
 
     private native String printSystemInfo();
 
@@ -133,6 +138,24 @@ public class WhisperJNI {
         return new WhisperState(this, ref, context);
     }
 
+    public WhisperGrammar parseGrammar(Path grammarPath) throws IOException {
+        if(!Files.exists(grammarPath) || Files.isDirectory(grammarPath)){
+            throw new FileNotFoundException("Grammar file not found");
+        }
+        return parseGrammar(Files.readString(grammarPath));
+    }
+
+    public WhisperGrammar parseGrammar(String text) throws IOException {
+        if(text.isBlank()) {
+            throw new IOException("Grammar text is blank");
+        }
+        int ref = loadGrammar(text);
+        if(ref == -1) {
+            return null;
+        }
+        return new WhisperGrammar(this, ref, text);
+    }
+
     /**
      * Initializes OpenVino encoder.
      *
@@ -166,6 +189,9 @@ public class WhisperJNI {
      */
     public int full(WhisperContext context, WhisperFullParams params, float[] samples, int numSamples) {
         WhisperJNIPointer.assertAvailable(context);
+        if(params.grammar != null) {
+            WhisperJNIPointer.assertAvailable(params.grammar);
+        }
         return full(context.ref, params, samples, numSamples);
     }
 
@@ -182,6 +208,9 @@ public class WhisperJNI {
     public int fullWithState(WhisperContext context, WhisperState state, WhisperFullParams params, float[] samples, int numSamples) {
         WhisperJNIPointer.assertAvailable(context);
         WhisperJNIPointer.assertAvailable(state);
+        if(params.grammar != null) {
+            WhisperJNIPointer.assertAvailable(params.grammar);
+        }
         return fullWithState(context.ref, state.ref, params, samples, numSamples);
     }
 
@@ -288,8 +317,8 @@ public class WhisperJNI {
         if (context.isReleased()) {
             return;
         }
-        context.release();
         freeContext(context.ref);
+        context.release();
     }
 
     /**
@@ -301,8 +330,21 @@ public class WhisperJNI {
         if (state.isReleased()) {
             return;
         }
-        state.release();
         freeState(state.ref);
+        state.release();
+    }
+
+    /**
+     * Release grammar memory in native implementation.
+     *
+     * @param grammar the {@link WhisperGrammar} to release
+     */
+    public void free(WhisperGrammar grammar) {
+        if (grammar.isReleased()) {
+            return;
+        }
+        freeGrammar(grammar.ref);
+        grammar.release();
     }
 
     /**

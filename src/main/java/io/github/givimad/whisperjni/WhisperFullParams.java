@@ -6,7 +6,9 @@ package io.github.givimad.whisperjni;
  * @author Miguel Álvarez Díez - Initial contribution
  */
 public class WhisperFullParams {
-
+    /**
+     * Whisper search strategy.
+     */
     private final int strategy;
 
     /**
@@ -33,6 +35,10 @@ public class WhisperFullParams {
      * Translate
      */
     public boolean translate;
+    /**
+     * Do not generate timestamps
+     */
+    public boolean noTimestamps;
     /**
      * Detect language
      */
@@ -121,7 +127,14 @@ public class WhisperFullParams {
      * Specific to bean search sampling strategy
      */
     public float beamSearchPatience = -1.0f;
-
+    /**
+     *
+     */
+    public WhisperGrammar grammar;
+    /**
+     *
+     */
+    public float grammarPenalty = 100f;
     /**
      * Creates a new {@link WhisperFullParams} instance using the provided {@link WhisperSamplingStrategy}
      *
@@ -135,6 +148,6 @@ public class WhisperFullParams {
      * Creates a new {@link WhisperFullParams} instance using the greedy {@link WhisperSamplingStrategy}
      */
     public WhisperFullParams() {
-        this(WhisperSamplingStrategy.GREEDY);
+        this(WhisperSamplingStrategy.BEAN_SEARCH);
     }
 }
