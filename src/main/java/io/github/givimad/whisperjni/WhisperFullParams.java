@@ -128,11 +128,11 @@ public class WhisperFullParams {
      */
     public float beamSearchPatience = -1.0f;
     /**
-     *
+     * GBNF grammar. 
      */
     public WhisperGrammar grammar;
     /**
-     *
+     * Penalty for non grammar tokens.
      */
     public float grammarPenalty = 100f;
     /**
