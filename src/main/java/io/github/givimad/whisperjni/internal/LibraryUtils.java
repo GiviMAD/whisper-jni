@@ -3,6 +3,7 @@ package io.github.givimad.whisperjni.internal;
 import io.github.givimad.whisperjni.WhisperJNI;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystemNotFoundException;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
@@ -21,7 +22,7 @@ public class LibraryUtils {
     }
     private static void createLibraryFromInputStream(String filename, InputStream is) throws IOException {
         Path libraryPath = libraryDir.resolve(filename);
-        try (is) {
+        try {
             Files.copy(is, libraryPath, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
             try {
@@ -58,7 +59,7 @@ public class LibraryUtils {
             throw new IllegalArgumentException("Missing path.");
         }
         logger.log("Copping "+ path + " into " + libraryDir.resolve(filename));
-        try (var is = Files.newInputStream(path)) {
+        try (InputStream is = Files.newInputStream(path)) {
             createLibraryFromInputStream(filename, is);
         }
     }
@@ -84,7 +85,11 @@ public class LibraryUtils {
             throw new IllegalArgumentException("The path has to be absolute (start with '/').");
         }
         logger.log("Extracting "+ path + " into " + libraryDir.resolve(filename));
-        createLibraryFromInputStream(filename, LibraryUtils.class.getResourceAsStream(path));
+        try(InputStream resourceAsStream = LibraryUtils.class.getResourceAsStream(path);){
+            createLibraryFromInputStream(filename, resourceAsStream);
+        }
+
+
     }
     private static Path createTempDirectory(String prefix) throws IOException {
         String tempDir = System.getProperty("java.io.tmpdir");
@@ -133,7 +138,7 @@ public class LibraryUtils {
             wrapperLibName = "libwhisperjni.so";
             String cpuInfo;
             try {
-                cpuInfo = Files.readString(Path.of("/proc/cpuinfo"));
+                cpuInfo = new String(Files.readAllBytes(Paths.get("/proc/cpuinfo")), StandardCharsets.UTF_8);
             } catch (IOException ignored) {
                 cpuInfo = "";
             }

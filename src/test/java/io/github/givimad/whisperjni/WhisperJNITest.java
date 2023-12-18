@@ -4,10 +4,13 @@ import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.ShortBuffer;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -18,21 +21,21 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class WhisperJNITest {
-    private static Path testModelPath = Path.of("ggml-tiny.bin");
-    private static Path samplePath = Path.of("src/main/native/whisper/samples/jfk.wav");
+    private static Path testModelPath = Paths.get("ggml-tiny.bin");
+    private static Path samplePath = Paths.get("src/main/native/whisper/samples/jfk.wav");
     private static WhisperJNI whisper;
 
     @BeforeAll
     public static void beforeAll() throws IOException {
-        var modelFile = testModelPath.toFile();
-        var sampleFile = samplePath.toFile();
+        File modelFile = testModelPath.toFile();
+        File sampleFile = samplePath.toFile();
         if(!modelFile.exists() || !modelFile.isFile()) {
             throw new RuntimeException("Missing model file: " + testModelPath.toAbsolutePath());
         }
         if(!sampleFile.exists() || !sampleFile.isFile()) {
             throw new RuntimeException("Missing sample file");
         }
-        var loadOptions = new WhisperJNI.LoadOptions();
+        WhisperJNI.LoadOptions loadOptions = new WhisperJNI.LoadOptions();
         loadOptions.logger = System.out::println;
         WhisperJNI.loadLibrary(loadOptions);
         WhisperJNI.setLibraryLogger(null);
@@ -41,27 +44,27 @@ public class WhisperJNITest {
 
     @Test
     public void testInit() throws IOException {
-        var ctx = whisper.init(testModelPath);
+        WhisperContext ctx = whisper.init(testModelPath);
         assertNotNull(ctx);
         ctx.close();
     }
 
     @Test
     public void testInitNoState() throws IOException {
-        var ctx = whisper.initNoState(testModelPath);
+        WhisperContext ctx = whisper.initNoState(testModelPath);
         assertNotNull(ctx);
         ctx.close();
     }
     @Test
     public void testContextIsMultilingual() throws IOException {
-        var ctx = whisper.initNoState(testModelPath);
+        WhisperContext ctx = whisper.initNoState(testModelPath);
         assertNotNull(ctx);
         assertTrue(whisper.isMultilingual(ctx));
         ctx.close();
     }
     @Test
     public void testNewState() throws IOException {
-        try (var ctx = whisper.initNoState(testModelPath)) {
+        try (WhisperContext ctx =whisper.initNoState(testModelPath)) {
             assertNotNull(ctx);
             WhisperState state = whisper.initState(ctx);
             assertNotNull(state);
@@ -70,7 +73,7 @@ public class WhisperJNITest {
     }
     @Test
     public void testSegmentIndexException() throws IOException {
-        var ctx = whisper.init(testModelPath);
+        WhisperContext ctx =whisper.init(testModelPath);
         Exception exception = assertThrows(IndexOutOfBoundsException.class, () -> {
             whisper.fullGetSegmentText(ctx, 1);
         });
@@ -79,9 +82,9 @@ public class WhisperJNITest {
     }
     @Test
     public void testPointerUnavailableException() throws UnsupportedAudioFileException, IOException {
-        var ctx = whisper.init(testModelPath);
+        WhisperContext ctx =whisper.init(testModelPath);
         float[] samples = readJFKFileSamples();
-        var params = new WhisperFullParams();
+        WhisperFullParams params = new WhisperFullParams();
         ctx.close();
         Exception exception = assertThrows(RuntimeException.class, () -> {
             whisper.full(ctx, params, samples, samples.length);
@@ -91,9 +94,9 @@ public class WhisperJNITest {
     @Test
     public void testFull() throws Exception {
         float[] samples = readJFKFileSamples();
-        try (var ctx = whisper.init(testModelPath)) {
+        try (WhisperContext ctx =whisper.init(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
+            WhisperFullParams params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
             int result = whisper.full(ctx, params, samples, samples.length);
             if(result != 0) {
                 throw new RuntimeException("Transcription failed with code " + result);
@@ -112,9 +115,9 @@ public class WhisperJNITest {
     @Test
     public void testFullBeanSearch() throws Exception {
         float[] samples = readJFKFileSamples();
-        try (var ctx = whisper.init(testModelPath)) {
+        try (WhisperContext ctx =whisper.init(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
+            WhisperFullParams params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
             params.printTimestamps = false;
             int result = whisper.full(ctx, params, samples, samples.length);
             if(result != 0) {
@@ -129,10 +132,10 @@ public class WhisperJNITest {
     @Test
     public void testFullWithState() throws Exception {
         float[] samples = readJFKFileSamples();
-        try (var ctx = whisper.initNoState(testModelPath)) {
+        try (WhisperContext ctx =whisper.initNoState(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
-            try (var state = whisper.initState(ctx)) {
+            WhisperFullParams params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
+            try (WhisperState state = whisper.initState(ctx)) {
                 assertNotNull(state);
                 int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
                 if(result != 0) {
@@ -153,11 +156,11 @@ public class WhisperJNITest {
     @Test
     public void testFullWithStateBeanSearch() throws Exception {
         float[] samples = readJFKFileSamples();
-        try (var ctx = whisper.initNoState(testModelPath)) {
+        try (WhisperContext ctx =whisper.initNoState(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
+            WhisperFullParams params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
             params.printTimestamps = false;
-            try (var state = whisper.initState(ctx)) {
+            try (WhisperState state = whisper.initState(ctx)) {
                 assertNotNull(state);
                 int result = whisper.fullWithState(ctx, state, params, samples, samples.length);
                 if(result != 0) {
@@ -179,9 +182,9 @@ public class WhisperJNITest {
         float[] samples = readJFKFileSamples();
         try (WhisperGrammar grammar = whisper.parseGrammar(grammarText)) {
             assertNotNull(grammar);
-            try (var ctx = whisper.init(testModelPath)) {
+            try (WhisperContext ctx =whisper.init(testModelPath)) {
                 assertNotNull(ctx);
-                var params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
+                WhisperFullParams params = new WhisperFullParams(WhisperSamplingStrategy.GREEDY);
                 params.grammar = grammar;
                 int result = whisper.full(ctx, params, samples, samples.length);
                 if (result != 0) {
@@ -198,13 +201,13 @@ public class WhisperJNITest {
     @Test
     public void printSystemInfo() throws Exception {
         String whisperCPPSystemInfo = whisper.getSystemInfo();
-        assertFalse(whisperCPPSystemInfo.isBlank());
+        assertFalse(whisperCPPSystemInfo.trim().isEmpty());
         System.out.println("whisper.cpp library info: " + whisperCPPSystemInfo);
     }
 
     @Test
     public void initOpenVINO() throws Exception {
-        try(var ctx = whisper.initNoState(testModelPath)) {
+        try(WhisperContext ctx =whisper.initNoState(testModelPath)) {
             assertNotNull(ctx);
             whisper.initOpenVINO(ctx, "CPU");
         }
@@ -221,10 +224,10 @@ public class WhisperJNITest {
             throw new IOException("Empty file");
         }
         // obtain the 16 int audio samples, short type in java
-        var shortBuffer = captureBuffer.asShortBuffer();
+        ShortBuffer shortBuffer = captureBuffer.asShortBuffer();
         // transform the samples to f32 samples
         float[] samples = new float[captureBuffer.capacity() / 2];
-        var i = 0;
+        int i = 0;
         while (shortBuffer.hasRemaining()) {
             samples[i++] = Float.max(-1f, Float.min(((float) shortBuffer.get()) / (float) Short.MAX_VALUE, 1f));
         }

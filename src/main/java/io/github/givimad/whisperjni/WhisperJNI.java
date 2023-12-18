@@ -4,6 +4,7 @@ import io.github.givimad.whisperjni.internal.LibraryUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 
@@ -142,11 +143,11 @@ public class WhisperJNI {
         if(!Files.exists(grammarPath) || Files.isDirectory(grammarPath)){
             throw new FileNotFoundException("Grammar file not found");
         }
-        return parseGrammar(Files.readString(grammarPath));
+        return parseGrammar(new String(Files.readAllBytes(grammarPath), StandardCharsets.UTF_8));
     }
 
     public WhisperGrammar parseGrammar(String text) throws IOException {
-        if(text.isBlank()) {
+        if(text.trim().isEmpty()) {
             throw new IOException("Grammar text is blank");
         }
         int ref = loadGrammar(text);
@@ -241,7 +242,7 @@ public class WhisperJNI {
      *
      * @param context a {@link WhisperContext} used to transcribe
      * @param index   the segment index
-     * @return start timestamp of segment text, 800 -> 8s
+     * @return start timestamp of segment text, 800 -&gt; 8s
      */
     public long fullGetSegmentTimestamp0(WhisperContext context, int index) {
         WhisperJNIPointer.assertAvailable(context);
@@ -253,7 +254,7 @@ public class WhisperJNI {
      *
      * @param context a {@link WhisperContext} used to transcribe
      * @param index   the segment index
-     * @return end timestamp of segment text, 1050 -> 10.5s
+     * @return end timestamp of segment text, 1050 -&gt; 10.5s
      */
     public long fullGetSegmentTimestamp1(WhisperContext context, int index) {
         WhisperJNIPointer.assertAvailable(context);
@@ -277,7 +278,7 @@ public class WhisperJNI {
      *
      * @param state a {@link WhisperState} used to transcribe
      * @param index the segment index
-     * @return start timestamp of segment text, 1050 -> 10.5s
+     * @return start timestamp of segment text, 1050 -&gt; 10.5s
      */
     public long fullGetSegmentTimestamp0FromState(WhisperState state, int index) {
         WhisperJNIPointer.assertAvailable(state);
@@ -289,7 +290,7 @@ public class WhisperJNI {
      *
      * @param state a {@link WhisperState} used to transcribe
      * @param index the segment index
-     * @return end timestamp of segment text, 1050 -> 10.5s
+     * @return end timestamp of segment text, 1050 -&gt; 10.5s
      */
     public long fullGetSegmentTimestamp1FromState(WhisperState state, int index) {
         WhisperJNIPointer.assertAvailable(state);
