@@ -8,7 +8,7 @@
     <artifactId>whisper-jni</artifactId>
     <name>whisper-jni</name>
     <url>https://github.com/GiviMAD/whisper-jni</url>
-    <version>1.5.1</version>
+    <version>1.5.2</version>
     <description>A JNI wrapper for [whisper.cpp](https://github.com/ggerganov/whisper.cpp), allows to transcribe speech to text in Java</description>
     
     <licenses>

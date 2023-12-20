@@ -63,7 +63,7 @@ public class WhisperGrammar extends WhisperJNI.WhisperJNIPointer {
      * Meaning it must contain a root expression with termination
      * which subexpressions can be resolved.
      *
-     * @param grammarText the GBNF grammar to use with whisper.cpp.
+     * @param grammarText GBNF grammar text.
      * @throws ParseException if grammar is invalid.
      */
     public static void assertValidGrammar(String grammarText) throws ParseException {

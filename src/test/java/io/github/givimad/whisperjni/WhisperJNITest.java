@@ -180,7 +180,6 @@ public class WhisperJNITest {
     public void testFullWithGrammar() throws Exception {
         // Init trailing space is important
         String grammarText = "root ::= \" And so, my fellow American, ask not what your country can do for you, ask what you can do for your country.\"";
-        System.out.println("Test grammar: \n" + grammarText);
         float[] samples = readJFKFileSamples();
         try (WhisperGrammar grammar = whisper.parseGrammar(grammarText)) {
             assertNotNull(grammar);
