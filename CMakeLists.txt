@@ -80,24 +80,20 @@ install(
 
 # Dependencies
 
-if(!MSVC)
-  install(
-    DIRECTORY ${WHISPER_DIR}/lib/
-    DESTINATION ${CMAKE_INSTALL_PREFIX}
-    USE_SOURCE_PERMISSIONS
-    FILES_MATCHING
-    PATTERN "*.dll"
-    PATTERN "*.so"
-    PATTERN "*.dylib"
-  )
-else()
-  install(
-    DIRECTORY ${WHISPER_DIR}/bin/
-    DESTINATION ${CMAKE_INSTALL_PREFIX}
-    USE_SOURCE_PERMISSIONS
-    FILES_MATCHING
-    PATTERN "*.dll"
-    PATTERN "*.so"
-    PATTERN "*.dylib"
-  )
-endif()
+install(
+  DIRECTORY ${WHISPER_DIR}/lib/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+  USE_SOURCE_PERMISSIONS
+  FILES_MATCHING
+  PATTERN "*.so"
+  PATTERN "*.dylib"
+)
+
+install(
+  DIRECTORY ${WHISPER_DIR}/bin/
+  DESTINATION ${CMAKE_INSTALL_PREFIX}
+  USE_SOURCE_PERMISSIONS
+  FILES_MATCHING
+  PATTERN "*.dll"
+)
+

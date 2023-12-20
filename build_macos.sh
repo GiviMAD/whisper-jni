@@ -24,3 +24,4 @@ TARGET=$AARCH-apple-macosx$TARGET_VERSION
 cmake -Bbuild -DCMAKE_INSTALL_PREFIX=src/main/resources/macos-$AARCH_NAME -DCMAKE_OSX_DEPLOYMENT_TARGET=$TARGET_VERSION -DCMAKE_OSX_ARCHITECTURES=$AARCH
 cmake --build build --config Release
 cmake --install build
+rm -rf build
