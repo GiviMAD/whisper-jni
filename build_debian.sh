@@ -3,7 +3,7 @@ set -xe
 build_lib() {
   TMP_DIR=src/main/resources/debian
   TARGET_DIR=src/main/resources/debian-$AARCH
-  cmake -B build $CMAKE_ARGS -DCMAKE_INSTALL_PREFIX=$TMP_DIR
+  cmake -B build "$CMAKE_ARGS" -DCMAKE_INSTALL_PREFIX=$TMP_DIR
   cmake --build build --config Release
   cmake --install build
   mv $TMP_DIR/libwhisper.so $TARGET_DIR/libwhisper$LIB_VARIANT.so
@@ -25,7 +25,7 @@ case $AARCH in
     ;;
   armhf|armv7l)
     AARCH=armv7l
-    LIB_VARIANT="+crc" CMAKE_ARGS="-DCMAKE_C_FLAGS='-march=armv8-a+crc -mfpu=neon-fp-armv8 -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations'" build_lib
-    ADD_WRAPPER=true CMAKE_ARGS="-DCMAKE_C_FLAGS='-mfpu=neon -mfp16-format=ieee -mno-unaligned-access -funsafe-math-optimizations'" build_lib
+    LIB_VARIANT="+crc" CMAKE_ARGS="-DCMAKE_C_FLAGS='-march=armv8-a+crc -mfpu=neon-fp-armv8 -mfp16-format=ieee -mno-unaligned-access'" build_lib
+    ADD_WRAPPER=true CMAKE_ARGS="-DCMAKE_C_FLAGS='-mfpu=neon -mfp16-format=ieee -mno-unaligned-access'" build_lib
     ;;
 esac
