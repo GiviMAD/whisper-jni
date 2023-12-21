@@ -1,5 +1,6 @@
 package io.github.givimad.whisperjni;
 
+import static io.github.givimad.whisperjni.WhisperGrammar.assertValidGrammar;
 import javax.sound.sampled.AudioInputStream;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.UnsupportedAudioFileException;
@@ -11,6 +12,7 @@ import java.nio.ByteOrder;
 import java.nio.ShortBuffer;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.ParseException;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -21,8 +23,13 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
 public class WhisperJNITest {
-    private static Path testModelPath = Paths.get("ggml-tiny.bin");
-    private static Path samplePath = Paths.get("src/main/native/whisper/samples/jfk.wav");
+   
+    private static Path testModelPath = Path.of("ggml-tiny.bin");
+    private static Path samplePath = Path.of("src/main/native/whisper/samples/jfk.wav");
+    private static Path sampleAssistantGrammar = Path.of("src/main/native/whisper/grammars/assistant.gbnf");
+    private static Path sampleChessGrammar = Path.of("src/main/native/whisper/grammars/chess.gbnf");
+    private static Path sampleColorsGrammar = Path.of("src/main/native/whisper/grammars/colors.gbnf");
+
     private static WhisperJNI whisper;
 
     @BeforeAll
@@ -178,7 +185,6 @@ public class WhisperJNITest {
     public void testFullWithGrammar() throws Exception {
         // Init trailing space is important
         String grammarText = "root ::= \" And so, my fellow American, ask not what your country can do for you, ask what you can do for your country.\"";
-        System.out.println("Test grammar: \n" + grammarText);
         float[] samples = readJFKFileSamples();
         try (WhisperGrammar grammar = whisper.parseGrammar(grammarText)) {
             assertNotNull(grammar);
@@ -212,7 +218,12 @@ public class WhisperJNITest {
             whisper.initOpenVINO(ctx, "CPU");
         }
     }
-
+    @Test
+    public void validateGrammar() throws ParseException, IOException {
+        assertValidGrammar(sampleAssistantGrammar);
+        assertValidGrammar(sampleColorsGrammar);
+        assertValidGrammar(sampleChessGrammar);
+    }
     private float[] readJFKFileSamples() throws UnsupportedAudioFileException, IOException {
         // sample is a 16 bit int 16000hz little endian wav file
         AudioInputStream audioInputStream = AudioSystem.getAudioInputStream(samplePath.toFile());

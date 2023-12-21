@@ -1,7 +1,10 @@
 FROM maven:3.9.3-eclipse-temurin-17-focal
-RUN apt update && apt install -y git build-essential
+# use kitware repo to get upper cmake version; fixes armv7l build
+RUN curl -s https://apt.kitware.com/kitware-archive.sh | bash -s
+RUN apt update && apt install -y git build-essential cmake
 COPY ggml-tiny.bin .
 COPY pom.xml .
+COPY CMakeLists.txt .
 COPY .git ./.git
 COPY src ./src
 RUN git submodule update --init
