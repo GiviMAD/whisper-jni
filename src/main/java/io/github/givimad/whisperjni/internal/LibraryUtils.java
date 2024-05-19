@@ -141,12 +141,12 @@ public class LibraryUtils {
                 options.logger.log("Compatible amd64 architecture detected.");
                 if(options.whisperLib == null) {
                     if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper+mf16c+mfma+mavx+mavx2.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper+mf16c+mfma+mavx+mavx2.so.1", "libwhisper.so.1", options.logger);
                     } else {
-                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper.so.1", "libwhisper.so.1", options.logger);
                     }
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
                 }
                 if(options.whisperJNILib == null){
                     LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
@@ -157,12 +157,12 @@ public class LibraryUtils {
                 options.logger.log("Compatible arm64 architecture detected.");
                 if(options.whisperLib == null){
                     if(cpuInfo.contains("fphp")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper+fp16.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper+fp16.so.1", "libwhisper.so.1", options.logger);
                     } else if(cpuInfo.contains("crc32")) {
-                        LibraryUtils.extractLibraryFromJar( "/debian-arm64/libwhisper+crc.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar( "/debian-arm64/libwhisper+crc.so.1", "libwhisper.so.1", options.logger);
                     }
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
                 }
                 if(options.whisperJNILib == null){
                     LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
@@ -173,12 +173,12 @@ public class LibraryUtils {
                 options.logger.log("Compatible arm architecture detected.");
                 if(options.whisperLib == null){
                     if(cpuInfo.contains("crc32")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper+crc.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper+crc.so.1", "libwhisper.so.1", options.logger);
                     } else {
-                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper.so", "libwhisper.so", options.logger);
+                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper.so.1", "libwhisper.so.1", options.logger);
                     }
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
                 }
                 if(options.whisperJNILib == null){
                     LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
@@ -194,9 +194,9 @@ public class LibraryUtils {
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
                 options.logger.log("Compatible amd64 architecture detected.");
                 if(options.whisperLib == null){
-                    LibraryUtils.extractLibraryFromJar( "/macos-amd64/libwhisper.dylib", "libwhisper.dylib", options.logger);
+                    LibraryUtils.extractLibraryFromJar( "/macos-amd64/libwhisper.1.dylib", "libwhisper.1.dylib", options.logger);
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.dylib", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.1.dylib", options.logger);
                 }
                 if(options.whisperJNILib == null){
                     LibraryUtils.extractLibraryFromJar("/macos-amd64/libwhisper-jni.dylib", "libwhisper-jni.dylib", options.logger);
@@ -206,9 +206,9 @@ public class LibraryUtils {
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
                 options.logger.log("Compatible arm64 architecture detected.");
                 if(options.whisperLib == null){
-                    LibraryUtils.extractLibraryFromJar( "/macos-arm64/libwhisper.dylib", "libwhisper.dylib", options.logger);
+                    LibraryUtils.extractLibraryFromJar( "/macos-arm64/libwhisper.1.dylib", "libwhisper.1.dylib", options.logger);
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.dylib", options.logger);
+                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.1.dylib", options.logger);
                 }
                 if(options.whisperJNILib == null){
                     LibraryUtils.extractLibraryFromJar("/macos-arm64/libwhisper-jni.dylib", "libwhisper-jni.dylib", options.logger);

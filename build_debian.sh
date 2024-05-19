@@ -6,9 +6,9 @@ build_lib() {
   cmake -B build $CMAKE_ARGS -DCMAKE_C_FLAGS="$CMAKE_CFLAGS" -DCMAKE_INSTALL_PREFIX=$TMP_DIR
   cmake --build build --config Release
   cmake --install build
-  mv $TMP_DIR/libwhisper.so $TARGET_DIR/libwhisper$LIB_VARIANT.so
+  cp $TMP_DIR/libwhisper.so.1 $TARGET_DIR/libwhisper$LIB_VARIANT.so.1
   if [ "$ADD_WRAPPER" = true ]; then
-    mv $TMP_DIR/libwhisper-jni.so $TARGET_DIR/libwhisper-jni.so
+    cp $TMP_DIR/libwhisper-jni.so $TARGET_DIR/libwhisper-jni.so
   fi
   rm -rf $TMP_DIR
   rm -rf build
