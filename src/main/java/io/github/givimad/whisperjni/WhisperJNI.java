@@ -142,7 +142,7 @@ public class WhisperJNI {
         if(!Files.exists(grammarPath) || Files.isDirectory(grammarPath)){
             throw new FileNotFoundException("Grammar file not found");
         }
-        return parseGrammar(Files.readString(grammarPath));
+        return parseGrammar(new String(Files.readAllBytes(grammarPath)));
     }
 
     public WhisperGrammar parseGrammar(String text) throws IOException {
