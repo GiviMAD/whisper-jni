@@ -103,9 +103,9 @@ mvn test
 
 If you want to add any missing whisper.cpp functionality you need to:
 
-* Add the native method description in src/main/java/io/github/givimad/whisperjni/WhisperJNI.java.
-* Run the gen_header.sh script to regenerate the src/main/native/io_github_givimad_whisperjni_WhisperJNI.h header file. 
-* Add the native method implementation in src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp.
-* Add a new test for it at src/test/java/io/github/givimad/whisperjni/WhisperJNITest.java.
+* Add the native method description in `src/main/java/io/github/givimad/whisperjni/WhisperJNI.java`.
+* Run the `gen_header.sh` script to regenerate the `src/main/native/io_github_givimad_whisperjni_WhisperJNI.h` header file. 
+* Add the native method implementation in `src/main/native/io_github_givimad_whisperjni_WhisperJNI.cpp`.
+* Add a new test for it at `src/test/java/io/github/givimad/whisperjni/WhisperJNITest.java`.
 
 BR
