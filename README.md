@@ -89,9 +89,9 @@ After cloning the project you need to init the whisper.cpp submodule by running:
 git submodule update --init
 ```
 
-Then you need to download the model used in the tests using the script 'download-test-model.sh' or 'download-test-model.ps1', the ggml-tiny model.
+Then you need to download the model used in the tests using the script `download-test-model.sh` or `download-test-model.ps1`, the ggml-tiny model.
 
-Run the appropriate build script for your platform (build_debian.sh, build_macos.sh or build_win.ps1), it will place the native library file on the resources directory.
+Run the appropriate build script for your platform (`build_debian.sh`, `build_macos.sh` or `build_win.ps1`), it will place the native library file on the resources directory.
 
 Finally, you can run the project tests to confirm it works:
 
