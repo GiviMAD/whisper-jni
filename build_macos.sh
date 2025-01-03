@@ -27,6 +27,7 @@ cmake -Bbuild -DCMAKE_INSTALL_PREFIX=$TMP_DIR -DCMAKE_OSX_DEPLOYMENT_TARGET=$TAR
 cmake --build build --config Release
 cmake --install build
 rm -rf build
+cp $TMP_DIR/libggml.dylib $TARGET_DIR
 cp $TMP_DIR/libwhisper.1.dylib $TARGET_DIR
 cp $TMP_DIR/libwhisper-jni.dylib $TARGET_DIR
 rm -rf $TMP_DIR

@@ -2,16 +2,16 @@ package io.github.givimad.whisperjni.internal;
 
 import io.github.givimad.whisperjni.WhisperJNI;
 
-import java.io.*;
-import java.nio.file.FileSystemNotFoundException;
-import java.nio.file.FileSystems;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.ProviderNotFoundException;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
-import java.util.function.Consumer;
 
 
 public class LibraryUtils {
@@ -98,39 +98,50 @@ public class LibraryUtils {
      * Register the native library, should be called at first.
      * @throws IOException when unable to load the native library
      */
-    public static void loadLibrary(WhisperJNI.LoadOptions options) throws IOException {
-        String wrapperLibName;
+    public static void loadLibrary(WhisperJNI.LibraryLogger logger) throws IOException {
+        String osName = System.getProperty("os.name").toLowerCase();
+        String altLibDirProperty = System.getProperty("io.github.givimad.whisperjni.libdir");
+        if (altLibDirProperty != null) {
+            try {
+                libraryDir = Paths.get(altLibDirProperty);
+            } catch (InvalidPathException e) {
+                logger.log("Ignoring invalid directory path " + altLibDirProperty);
+            }
+        }
+        var libraryPaths = getJarLibraryPaths(logger, libraryDir != null);
+        if (libraryDir == null) {
+            if (!osName.contains("win")) {
+                LibraryUtils.extractLibraryFromJar(libraryPaths.whisperPath, libraryPaths.whisperFilename, logger);
+                LibraryUtils.extractLibraryFromJar(libraryPaths.ggmlPath, libraryPaths.ggmlFilename, logger);
+            }
+            LibraryUtils.extractLibraryFromJar(libraryPaths.whisperJNIPath, libraryPaths.whisperJNIFilename, logger);
+        }
+        System.load(libraryDir.resolve(libraryPaths.whisperJNIFilename).toAbsolutePath().toString());
+    }
+    private static LibraryPaths getJarLibraryPaths(WhisperJNI.LibraryLogger logger, boolean customLibraryPath) throws IOException {
+        LibraryPaths.Builder builder = new LibraryPaths.Builder();
         String osName = System.getProperty("os.name").toLowerCase();
         String osArch = System.getProperty("os.arch").toLowerCase();
-        if(options.whisperLib != null && options.whisperJNILib != null) {
-            options.logger.log("Skipping OS detection.");
-            wrapperLibName = options.whisperJNILib.getFileName().toString();
-            LibraryUtils.copyFromSystem(options.whisperJNILib, wrapperLibName, options.logger);
-            LibraryUtils.copyFromSystem(options.whisperLib, options.whisperLib.getFileName().toString(), options.logger);
-        } else if (osName.contains("win")) {
-            options.logger.log("OS detected: Windows.");
-            wrapperLibName = "whisper-jni.dll";
+        if (osName.contains("win")) {
+            logger.log("OS detected: Windows.");
+            builder.setWhisperJNIFilename("whisper-jni.dll");
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                options.logger.log("Compatible amd64 architecture detected.");
-                if(options.whisperJNILib == null){
-                    options.logger.log("Looking for whisper.dll in $env:PATH.");
-                    if(isWhisperDLLInstalled()) {
-                        options.logger.log("File whisper.dll found, it will be used.");
-                        LibraryUtils.extractLibraryFromJar("/win-amd64/whisper-jni.dll", "whisper-jni.dll", options.logger);
-                    } else {
-                        options.logger.log("File whisper.dll not found, loading full version.");
-                        LibraryUtils.extractLibraryFromJar("/win-amd64/whisper-jni_full.dll", "whisper-jni.dll", options.logger);
-                    }
+                logger.log("Compatible amd64 architecture detected.");
+                logger.log("Looking for whisper.dll in $env:PATH.");
+                if(customLibraryPath || isWhisperDLLInstalled()) {
+                    logger.log("File whisper.dll found, it will be used.");
+                    builder.setWhisperJNIPath("/win-amd64/whisper-jni.dll");
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "whisper-jni.dll", options.logger);
+                    logger.log("File whisper.dll not found, loading full version.");
+                    builder.setWhisperJNIPath("/win-amd64/whisper-jni_full.dll");
                 }
-            } else {
-                throw new IOException("Unknown OS architecture");
             }
         } else if (osName.contains("nix") || osName.contains("nux")
                 || osName.contains("aix")) {
-            options.logger.log("OS detected: Linux.");
-            wrapperLibName = "libwhisper-jni.so";
+            logger.log("OS detected: Linux.");
+            builder.setWhisperJNIFilename("libwhisper-jni.so");
+            builder.setWhisperFilename("libwhisper.so.1");
+            builder.setGgmlFilename("libggml.so");
             String cpuInfo;
             try {
                 cpuInfo = Files.readString(Path.of("/proc/cpuinfo"));
@@ -138,90 +149,60 @@ public class LibraryUtils {
                 cpuInfo = "";
             }
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                options.logger.log("Compatible amd64 architecture detected.");
-                if(options.whisperLib == null) {
-                    if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper+mf16c+mfma+mavx+mavx2.so.1", "libwhisper.so.1", options.logger);
-                    } else {
-                        LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper.so.1", "libwhisper.so.1", options.logger);
-                    }
+                logger.log("Compatible amd64 architecture detected.");
+                builder.setWhisperJNIPath("/debian-amd64/libwhisper-jni.so");
+                builder.setWhisperPath("/debian-amd64/libwhisper.so.1");
+                if(cpuInfo.contains("avx2") && cpuInfo.contains("fma") && cpuInfo.contains("f16c") && cpuInfo.contains("avx")) {
+                    logger.log("Using ggml with extra cpu features (mf16c, mfma, mavx, mavx2)");
+                    builder.setGgmlPath("/debian-amd64/libggml+mf16c+mfma+mavx+mavx2.so");
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
-                }
-                if(options.whisperJNILib == null){
-                    LibraryUtils.extractLibraryFromJar("/debian-amd64/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisper-jni.so", options.logger);
+                    builder.setGgmlPath("/debian-amd64/libggml.so");
                 }
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                options.logger.log("Compatible arm64 architecture detected.");
-                if(options.whisperLib == null){
-                    if(cpuInfo.contains("fphp")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper+fp16.so.1", "libwhisper.so.1", options.logger);
-                    } else if(cpuInfo.contains("crc32")) {
-                        LibraryUtils.extractLibraryFromJar( "/debian-arm64/libwhisper+crc.so.1", "libwhisper.so.1", options.logger);
-                    }
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
-                }
-                if(options.whisperJNILib == null){
-                    LibraryUtils.extractLibraryFromJar("/debian-arm64/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisper-jni.so", options.logger);
+                logger.log("Compatible arm64 architecture detected.");
+                builder.setWhisperJNIPath("/debian-arm64/libwhisper-jni.so");
+                builder.setWhisperPath("/debian-arm64/libwhisper.so.1");
+                if(cpuInfo.contains("fphp")) {
+                    logger.log("Using ggml with extra cpu features (fp16)");
+                    builder.setGgmlPath("/debian-arm64/libggml+fp16.so");
+                } else if(cpuInfo.contains("crc32")) {
+                    builder.setGgmlPath("/debian-arm64/libggml.so");
                 }
             } else if(osArch.contains("armv7") || osArch.contains("arm")) {
-                options.logger.log("Compatible arm architecture detected.");
-                if(options.whisperLib == null){
-                    if(cpuInfo.contains("crc32")) {
-                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper+crc.so.1", "libwhisper.so.1", options.logger);
-                    } else {
-                        LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper.so.1", "libwhisper.so.1", options.logger);
-                    }
+                logger.log("Compatible arm architecture detected.");
+                builder.setWhisperJNIPath("/debian-armv7l/libwhisper-jni.so");
+                builder.setWhisperPath("/debian-armv7l/libwhisper.so.1");
+                if(cpuInfo.contains("crc32")) {
+                    logger.log("Using ggml with extra cpu features (crc)");
+                    builder.setGgmlPath("/debian-armv7l/libggml+crc.so");
                 } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.so.1", options.logger);
-                }
-                if(options.whisperJNILib == null){
-                    LibraryUtils.extractLibraryFromJar("/debian-armv7l/libwhisper-jni.so", "libwhisper-jni.so", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisper-jni.so", options.logger);
+                    builder.setGgmlPath("/debian-armv7l/libggml.so");
                 }
             } else {
                 throw new IOException("Unknown OS architecture");
             }
         } else if (osName.contains("mac") || osName.contains("darwin")) {
-            options.logger.log("OS detected: macOS.");
-            wrapperLibName = "libwhisper-jni.dylib";
+            logger.log("OS detected: macOS.");
+            builder.setWhisperJNIFilename("libwhisper-jni.dylib");
+            builder.setWhisperFilename("libwhisper.1.dylib");
+            builder.setGgmlFilename("libggml.dylib");
             if(osArch.contains("amd64") || osArch.contains("x86_64")) {
-                options.logger.log("Compatible amd64 architecture detected.");
-                if(options.whisperLib == null){
-                    LibraryUtils.extractLibraryFromJar( "/macos-amd64/libwhisper.1.dylib", "libwhisper.1.dylib", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.1.dylib", options.logger);
-                }
-                if(options.whisperJNILib == null){
-                    LibraryUtils.extractLibraryFromJar("/macos-amd64/libwhisper-jni.dylib", "libwhisper-jni.dylib", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisper-jni.dylib", options.logger);
-                }
+                logger.log("Compatible amd64 architecture detected.");
+                builder.setWhisperJNIPath("/macos-amd64/libwhisper-jni.dylib");
+                builder.setWhisperPath("/macos-amd64/libwhisper.1.dylib");
+                builder.setGgmlPath("/macos-amd64/libggml.dylib");
             } else if(osArch.contains("aarch64") || osArch.contains("arm64")) {
-                options.logger.log("Compatible arm64 architecture detected.");
-                if(options.whisperLib == null){
-                    LibraryUtils.extractLibraryFromJar( "/macos-arm64/libwhisper.1.dylib", "libwhisper.1.dylib", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperLib, "libwhisper.1.dylib", options.logger);
-                }
-                if(options.whisperJNILib == null){
-                    LibraryUtils.extractLibraryFromJar("/macos-arm64/libwhisper-jni.dylib", "libwhisper-jni.dylib", options.logger);
-                } else {
-                    LibraryUtils.copyFromSystem(options.whisperJNILib, "libwhisper-jni.dylib", options.logger);
-                }
+                logger.log("Compatible arm64 architecture detected.");
+                builder.setWhisperJNIPath("/macos-arm64/libwhisper-jni.dylib");
+                builder.setWhisperPath("/macos-arm64/libwhisper.1.dylib");
+                builder.setGgmlPath("/macos-arm64/libggml.dylib");
             } else {
                 throw new IOException("Unknown OS architecture");
             }
         } else {
             throw new IOException("Unknown OS");
         }
-        System.load(libraryDir.resolve(wrapperLibName).toAbsolutePath().toString());
+        return builder.build();
     }
     private static boolean isWhisperDLLInstalled() {
         return Arrays
@@ -229,5 +210,60 @@ public class LibraryUtils {
                 .map(Paths::get)
                 .map(p -> p.resolve("whisper.dll"))
                 .anyMatch(Files::exists);
+    }
+
+    private static final class LibraryPaths {
+        final String whisperJNIPath;
+        final String whisperJNIFilename;
+        final String whisperPath;
+        final String whisperFilename;
+        final String ggmlFilename;
+        final String ggmlPath;
+
+        private LibraryPaths(String whisperJNIPath, String whisperJNIFilename, String whisperPath, String whisperFilename, String ggmlFilename, String ggmlPath) {
+            this.whisperJNIPath = whisperJNIPath;
+            this.whisperJNIFilename = whisperJNIFilename;
+            this.whisperPath = whisperPath;
+            this.whisperFilename = whisperFilename;
+            this.ggmlFilename = ggmlFilename;
+            this.ggmlPath = ggmlPath;
+        }
+
+
+        static final class Builder {
+            private String whisperJNIPath;
+            private String whisperJNIFilename;
+            private String whisperPath;
+            private String whisperFilename;
+            private String ggmlFilename;
+            private String ggmlPath;
+            public void setGgmlFilename(String ggmlFilename) {
+                this.ggmlFilename = ggmlFilename;
+            }
+            public void setGgmlPath(String ggmlPath) {
+                this.ggmlPath = ggmlPath;
+            }
+            public void setWhisperFilename(String whisperFilename) {
+                this.whisperFilename = whisperFilename;
+            }
+            public void setWhisperJNIFilename(String whisperJNIFilename) {
+                this.whisperJNIFilename = whisperJNIFilename;
+            }
+            public void setWhisperJNIPath(String whisperJNIPath) {
+                this.whisperJNIPath = whisperJNIPath;
+            }
+            public void setWhisperPath(String whisperPath) {
+                this.whisperPath = whisperPath;
+            }
+            public LibraryPaths build() {
+                return new LibraryPaths(whisperJNIPath,
+                  whisperJNIFilename,
+                  whisperPath,
+                  whisperFilename,
+                  ggmlFilename,
+                  ggmlPath);
+            }
+        }
+
     }
 }

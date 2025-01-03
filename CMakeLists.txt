@@ -1,16 +1,19 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.5)
 
 project(whisper-jni C CXX)
 
 # ---- Set options ----
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
-option(WHISPER_NO_AVX                 "whisper: disable AVX"  OFF)
-option(WHISPER_NO_AVX2                "whisper: disable AVX2" OFF)
-option(WHISPER_NO_FMA                 "whisper: disable FMA"  OFF)
-option(WHISPER_NO_F16C                "whisper: disable F16c" OFF)
-option(BUILD_SHARED_LIBS              "whisper: build shared libs" ON)
+
+option(GGML_AVX                 "ggml: enable AVX"                ON )
+option(GGML_AVX2                "ggml: enable AVX2"               ON )
+option(GGML_FMA                 "ggml: enable FMA"                ON )
+option(GGML_F16C                "ggml: enable F16c"               ON )
+option(GGML_STATIC              "ggml: static link libraries"     OFF)
+option(GGML_NATIVE              "ggml: enable -march=native flag" OFF)
+option(BUILD_SHARED_LIBS        "whisper: build shared libs"      ON )
 
 set(JAVA_AWT_LIBRARY NotNeeded)
 set(JAVA_JVM_LIBRARY NotNeeded)
@@ -26,6 +29,7 @@ if(MSVC)
 elseif(NOT APPLE)
   string(APPEND CMAKE_CXX_FLAGS " -Wall -Wextra -Wl,-rpath,'$ORIGIN'")
   string(APPEND CMAKE_C_FLAGS " -Wall -Wextra")
+  set(CMAKE_INSTALL_RPATH '$ORIGIN')
 elseif(APPLE)
   set(CMAKE_INSTALL_RPATH "@loader_path")
 endif()
@@ -42,7 +46,8 @@ include(ExternalProject)
     whisper-cpp
     PREFIX "${WHISPER_INSTALL_DIR}"
     URL "${CMAKE_CURRENT_LIST_DIR}/src/main/native/whisper"
-    CMAKE_ARGS -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS} -DWHISPER_NO_AVX=${WHISPER_NO_AVX} -DWHISPER_NO_AVX2=${WHISPER_NO_AVX2} -DWHISPER_NO_FMA=${WHISPER_NO_FMA} -DWHISPER_NO_F16C=${WHISPER_NO_F16C} -DWHISPER_STANDALONE=1 -DWHISPER_METAL=0 -DCMAKE_INSTALL_PREFIX:PATH=${WHISPER_DIR} -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES} -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}  )
+    CMAKE_ARGS -DCMAKE_INSTALL_RPATH:STRING=${CMAKE_INSTALL_RPATH} -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS} -DCMAKE_C_FLAGS:STRING=${CMAKE_C_FLAGS} -DGGML_STATIC=${GGML_STATIC} -DGGML_NATIVE=${GGML_NATIVE} -DGGML_AVX=${GGML_AVX} -DGGML_AVX2=${GGML_AVX2} -DGGML_FMA=${GGML_FMA} -DGGML_F16C=${GGML_F16C} -DWHISPER_STANDALONE=1 -DCMAKE_INSTALL_PREFIX:PATH=${WHISPER_DIR} -DCMAKE_OSX_ARCHITECTURES:STRING=${CMAKE_OSX_ARCHITECTURES} -DCMAKE_OSX_DEPLOYMENT_TARGET:STRING=${CMAKE_OSX_DEPLOYMENT_TARGET}
+  )
   add_dependencies(whisper-jni whisper-cpp)
 endif()
 
@@ -57,6 +62,7 @@ endif()
 
 target_link_libraries(whisper-jni
   whisper
+  ggml
 )
 
 target_link_directories(whisper-jni PUBLIC
@@ -67,7 +73,7 @@ target_link_directories(whisper-jni PUBLIC
 target_include_directories(whisper-jni PUBLIC
   ${JNI_INCLUDE_DIRS}
   src/main/native
-  ${WHISPER_INSTALL_DIR}/src/whisper-cpp
+  ${WHISPER_DIR}/include
   ${WHISPER_INSTALL_DIR}/src/whisper-cpp/examples
 )
 
@@ -86,6 +92,7 @@ install(
   USE_SOURCE_PERMISSIONS
   FILES_MATCHING
   PATTERN "*.so.*"
+  PATTERN "*.so"
   PATTERN "*.dylib"
 )
 

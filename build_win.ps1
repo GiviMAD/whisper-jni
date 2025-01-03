@@ -1,5 +1,5 @@
 # build full version
-cmake -B build -DCMAKE_INSTALL_PREFIX=src/main/resources/win-amd64 -DBUILD_SHARED_LIBS=0
+cmake -B build -DCMAKE_INSTALL_PREFIX=src/main/resources/win-amd64 -DBUILD_SHARED_LIBS=0 -DGGML_STATIC=1 
 cmake --build build --config Release
 cmake --install build
 rm -r -fo build
@@ -11,3 +11,4 @@ cmake --install build
 rm -r -fo build
 rm -r -fo src/main/resources/win-amd64/*.lib
 rm -r -fo src/main/resources/win-amd64/whisper.dll
+rm -r -fo src/main/resources/win-amd64/ggml.dll

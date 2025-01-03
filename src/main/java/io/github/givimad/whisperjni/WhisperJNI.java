@@ -368,20 +368,17 @@ public class WhisperJNI {
     /**
      * Register the native library, should be called at first.
      *
-     * @param options instance of {@link LoadOptions} to customize library load.
+     * @param logger instance of {@link LibraryLogger}.
      * @throws IOException when unable to load the native library.
      */
-    public static void loadLibrary(LoadOptions options) throws IOException {
+    public static void loadLibrary(LibraryLogger logger) throws IOException {
         if (libraryLoaded) {
             return;
         }
-        if (options == null) {
-            options = new LoadOptions();
+        if(logger == null) {
+            logger = (String ignored) -> {};
         }
-        if(options.logger == null) {
-            options.logger = (String ignored) -> { };
-        }
-        LibraryUtils.loadLibrary(options);
+        LibraryUtils.loadLibrary(logger);
         libraryLoaded = true;
     }
 
@@ -403,30 +400,6 @@ public class WhisperJNI {
      */
     public interface LibraryLogger {
         void log(String text);
-    }
-
-    /**
-     * The class {@link LoadOptions} allows to customize the load of the required shared libraries.
-     *
-     * @author Miguel Álvarez Díez - Initial contribution
-     */
-    public static class LoadOptions {
-        /**
-         * Logs the library registration process (platform detection and library extraction).
-         */
-        public LibraryLogger logger;
-        /**
-         * Path to whisper jni library (so/dll/dylib).
-         * Takes prevalence over the bundled binary.
-         */
-        public Path whisperJNILib;
-        /**
-         * Path to whisper library (so/dylib).
-         * Takes prevalence over the bundled binary.
-         * Only works on Linux and macOS.
-         * On windows the library search for the whisper.dll in the $env:PATH directories.
-         */
-        public Path whisperLib;
     }
 
     /**

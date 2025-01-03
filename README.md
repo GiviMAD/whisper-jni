@@ -21,24 +21,11 @@ You can also find the package's jar attached to each [release](https://github.co
 
 ### Use external whisper shared library.
 
-It's possible to use your own build of the whisper.cpp shared library with this project.
+It's possible to use an external whisper.cpp shared library instead of the one packaged in the jar.
 
-On `Linux/macOs` you need to provide the library path to the `loadLibrary` method.
+On linux/mac set the property `io.github.givimad.whisperjni.libdir` to an alternative directory that contains the whisper-jni and whisper-cpp libraries.
 
-```java
-        ...
-        // load platform binaries
-        var loadOptions = new WhisperJNI.LoadOptions();
-        // Log library load to stdout
-        loadOptions.logger = System.out::println;
-        // Provide path to libwhisper so/dylib file.
-        loadOptions.whisperLib = Paths.get("/usr/local/lib/libwhisper.so");
-        // register the library
-        WhisperJNI.loadLibrary(loadOptions);
-        ...
-```
-
-On `windows` it's automatically used if `whisper.dll` exists in some of the directories in the $env:PATH variable.
+On `windows` an external `whisper.dll` it's automatically used if it exists in some of the directories in the $env:PATH variable.
 
 ## Basic Example
 
