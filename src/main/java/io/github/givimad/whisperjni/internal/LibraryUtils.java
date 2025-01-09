@@ -144,7 +144,7 @@ public class LibraryUtils {
             builder.setGgmlFilename("libggml.so");
             String cpuInfo;
             try {
-                cpuInfo = Files.readString(Path.of("/proc/cpuinfo"));
+                cpuInfo = new String(Files.readAllBytes(Path.of("/proc/cpuinfo")));
             } catch (IOException ignored) {
                 cpuInfo = "";
             }
