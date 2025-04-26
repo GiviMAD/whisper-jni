@@ -54,7 +54,7 @@ public class WhisperGrammar extends WhisperJNI.WhisperJNIPointer {
         if (!Files.exists(grammar)) {
             throw new ParseException("Grammar file does not exists.", 0);
         }
-        assertValidGrammar(Files.readString(grammar));
+        assertValidGrammar(new String(Files.readAllBytes(grammar)));
     }
 
     /**
