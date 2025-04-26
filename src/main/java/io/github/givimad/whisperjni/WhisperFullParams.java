@@ -89,7 +89,7 @@ public class WhisperFullParams {
     public float temperature = 0.0f;
     /**
      * Refer to library
-     */    
+     */
     public float maxInitialTs = 1.0f;
     /**
      * Refer to library
@@ -116,15 +116,15 @@ public class WhisperFullParams {
      */
     public int greedyBestOf = -1;
     /**
-     * Specific to bean search sampling strategy
+     * Specific to beam search sampling strategy
      */
     public int beamSearchBeamSize = 2;
     /**
-     * Specific to bean search sampling strategy
+     * Specific to beam search sampling strategy
      */
     public float beamSearchPatience = -1.0f;
     /**
-     * GBNF grammar. 
+     * GBNF grammar.
      */
     public WhisperGrammar grammar;
     /**
@@ -144,6 +144,6 @@ public class WhisperFullParams {
      * Creates a new {@link WhisperFullParams} instance using the greedy {@link WhisperSamplingStrategy}
      */
     public WhisperFullParams() {
-        this(WhisperSamplingStrategy.BEAN_SEARCH);
+        this(WhisperSamplingStrategy.BEAM_SEARCH);
     }
 }

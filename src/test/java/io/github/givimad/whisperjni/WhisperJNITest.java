@@ -113,11 +113,11 @@ public class WhisperJNITest {
     }
 
     @Test
-    public void testFullBeanSearch() throws Exception {
+    public void testFullBeamSearch() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.init(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
+            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAM_SEARCH);
             params.printTimestamps = false;
             int result = whisper.full(ctx, params, samples, samples.length);
             if(result != 0) {
@@ -154,11 +154,11 @@ public class WhisperJNITest {
     }
 
     @Test
-    public void testFullWithStateBeanSearch() throws Exception {
+    public void testFullWithStateBeamSearch() throws Exception {
         float[] samples = readJFKFileSamples();
         try (var ctx = whisper.initNoState(testModelPath)) {
             assertNotNull(ctx);
-            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAN_SEARCH);
+            var params = new WhisperFullParams(WhisperSamplingStrategy.BEAM_SEARCH);
             params.printTimestamps = false;
             try (var state = whisper.initState(ctx)) {
                 assertNotNull(state);
