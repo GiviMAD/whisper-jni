@@ -12,5 +12,5 @@ public enum WhisperSamplingStrategy {
     /**
      * Similar to OpenAI's BeamSearchDecoder
      */
-    BEAN_SEARCH;
+    BEAM_SEARCH;
 }
