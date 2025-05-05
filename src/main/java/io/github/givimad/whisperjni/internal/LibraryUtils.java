@@ -204,14 +204,27 @@ public class LibraryUtils {
         }
         return builder.build();
     }
+    
     private static boolean isWhisperDLLInstalled() {
-        return Arrays
-                .stream(System.getenv("PATH").split(";"))
-                .map(Paths::get)
-                .map(p -> p.resolve("whisper.dll"))
-                .anyMatch(Files::exists);
+        String pathEnv = System.getenv("PATH");
+        if (pathEnv == null || pathEnv.isEmpty()) {
+            return false;
+        }
+        
+        return Arrays.stream(pathEnv.split(Pattern.quote(File.pathSeparator)))
+                     .map(String::trim)
+                     .filter(s -> !s.isEmpty())
+                     .map(path -> {
+                         try {
+                             return Paths.get(path).resolve("whisper.dll");
+                         } catch (InvalidPathException e) {
+                             return null; // skip invalid path
+                         }
+                     })
+                     .filter(Objects::nonNull)
+                     .anyMatch(Files::exists);
     }
-
+    
     private static final class LibraryPaths {
         final String whisperJNIPath;
         final String whisperJNIFilename;
