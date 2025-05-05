@@ -1,7 +1,5 @@
 package io.github.givimad.whisperjni.internal;
 
-import io.github.givimad.whisperjni.WhisperJNI;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,6 +10,10 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
+import java.util.Objects;
+import java.util.regex.Pattern;
+
+import io.github.givimad.whisperjni.WhisperJNI;
 
 
 public class LibraryUtils {
@@ -204,14 +206,27 @@ public class LibraryUtils {
         }
         return builder.build();
     }
+    
     private static boolean isWhisperDLLInstalled() {
-        return Arrays
-                .stream(System.getenv("PATH").split(";"))
-                .map(Paths::get)
-                .map(p -> p.resolve("whisper.dll"))
-                .anyMatch(Files::exists);
+        String pathEnv = System.getenv("PATH");
+        if (pathEnv == null || pathEnv.isEmpty()) {
+            return false;
+        }
+        
+        return Arrays.stream(pathEnv.split(Pattern.quote(File.pathSeparator)))
+                     .map(String::trim)
+                     .filter(s -> !s.isEmpty())
+                     .map(path -> {
+                         try {
+                             return Paths.get(path).resolve("whisper.dll");
+                         } catch (InvalidPathException e) {
+                             return null;
+                         }
+                     })
+                     .filter(Objects::nonNull)
+                     .anyMatch(Files::exists);
     }
-
+    
     private static final class LibraryPaths {
         final String whisperJNIPath;
         final String whisperJNIFilename;
